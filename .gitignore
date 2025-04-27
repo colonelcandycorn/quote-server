@@ -3,3 +3,5 @@
 quote_server.db
 /migration/target
 /migration/README.md
+/entity/target
+/service/target
