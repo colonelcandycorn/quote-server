@@ -6,7 +6,7 @@ pub struct DataAccess {}
 /*
 source: https://github.com/SeaQL/sea-orm/blob/master/examples/axum_example/service/src/mutation.rs
 
-and 
+and
 
 source: https://github.com/SeaQL/sea-orm/blob/master/examples/axum_example/service/src/query.rs
 */
@@ -38,6 +38,9 @@ impl DataAccess {
             .paginate(db, page_size);
         let total = paginator.num_items().await?;
 
-        paginator.fetch_page(page - 1).await.map(|items| (items, total))
+        paginator
+            .fetch_page(page - 1)
+            .await
+            .map(|items| (items, total))
     }
 }

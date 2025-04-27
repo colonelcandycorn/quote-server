@@ -20,7 +20,7 @@ impl MigrationTrait for Migration {
                     .col(pk_auto(Quote::Id))
                     .col(string(Quote::Name))
                     .col(string(Quote::Quote))
-                    .to_owned()
+                    .to_owned(),
             )
             .await
     }

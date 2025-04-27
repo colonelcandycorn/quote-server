@@ -2110,11 +2110,13 @@ dependencies = [
  "askama",
  "axum",
  "clap",
+ "displaydoc",
  "entity",
  "sea-orm",
  "serde",
  "serde_json",
  "service",
+ "thiserror",
  "tokio",
 ]
 

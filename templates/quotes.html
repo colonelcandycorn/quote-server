@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<ul>
+    {% for quote in quotes %}
+    <li>
+        {{ quote.quote}} <br> {{ quote.name }}
+    </li>
+    {% endfor %}
+</ul>
+
+{% endblock content %}

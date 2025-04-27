@@ -1,4 +1,5 @@
 /target
+.idea/
 /static/assets/quotes.json
 quote_server.db
 /migration/target
