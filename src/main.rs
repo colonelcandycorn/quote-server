@@ -8,6 +8,8 @@ use service::data_access::DataAccess;
 use std::fs::File;
 use std::io::BufReader;
 
+use tower_http::trace::TraceLayer;
+
 use axum::{
     extract::{Query, State},
     http::StatusCode,
@@ -106,8 +108,10 @@ async fn get_root() -> Response {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Deal with the Arguments
     let args = Args::parse();
 
+    // Deal with Database Connection
     let db = Database::connect(format!("sqlite:{}", args.db_path)).await?;
 
     if args.init {
@@ -118,11 +122,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
+    // Set up Tracing
+    tracing_subscriber::fmt::init();
+
     let state = AppState { db_conn: db };
 
     let app = Router::new()
         .route("/", get(get_root))
         .route("/quotes", get(get_quotes))
+        .layer(TraceLayer::new_for_http())
         .with_state(state);
 
     let addr = "127.0.0.1:3000";
