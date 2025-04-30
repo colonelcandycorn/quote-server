@@ -7,9 +7,7 @@ use serde::Deserialize;
 use service::data_access::DataAccess;
 use std::fs::File;
 use std::io::BufReader;
-
-use tower_http::trace::TraceLayer;
-use tower_http::{trace ,services};
+use tower_http::trace;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use axum::{
