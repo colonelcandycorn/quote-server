@@ -9,6 +9,8 @@ use std::fs::File;
 use std::io::BufReader;
 
 use tower_http::trace::TraceLayer;
+use tower_http::{trace ,services};
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use axum::{
     extract::{Query, State},
@@ -122,15 +124,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
+    // taken from: https://github.com/pdx-cs-rust-web/knock-knock-2/blob/main/src/main.rs
     // Set up Tracing
-    tracing_subscriber::fmt::init();
+    tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| "kk2=debug,info".into()),
+        )
+        .with(tracing_subscriber::fmt::layer())
+        .init();
+
+    let trace_layer = trace::TraceLayer::new_for_http()
+        .make_span_with(trace::DefaultMakeSpan::new().level(tracing::Level::INFO))
+        .on_response(trace::DefaultOnResponse::new().level(tracing::Level::INFO));
 
     let state = AppState { db_conn: db };
 
     let app = Router::new()
         .route("/", get(get_root))
         .route("/quotes", get(get_quotes))
-        .layer(TraceLayer::new_for_http())
+        .layer(trace_layer)
         .with_state(state);
 
     let addr = "127.0.0.1:3000";

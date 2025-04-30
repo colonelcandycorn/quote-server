@@ -6,3 +6,4 @@ quote_server.db
 /migration/README.md
 /entity/target
 /service/target
+.env
