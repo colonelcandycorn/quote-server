@@ -5,6 +5,8 @@
     {% for quote in quotes %}
     <li>
         {{ quote.quote}} <br> {{ quote.name }}
+        {% for tag in quote.related_tags %}
+        {% endfor %}
     </li>
     {% endfor %}
 </ul>

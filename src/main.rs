@@ -5,6 +5,7 @@ use sea_orm::Database;
 use sea_orm::DatabaseConnection;
 use serde::Deserialize;
 use service::data_access::DataAccess;
+use service::data_transfer_objects::QuoteDTO;
 use std::fs::File;
 use std::io::BufReader;
 use tower_http::trace;
@@ -21,7 +22,7 @@ use axum::{
 #[derive(Template)]
 #[template(path = "quotes.html")]
 struct QuotesTemplate {
-    quotes: Vec<QuoteModel>,
+    quotes: Vec<QuoteDTO>,
 }
 
 #[derive(Parser, Debug)]

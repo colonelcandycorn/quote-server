@@ -1,4 +1,5 @@
-use ::entity::{quote, quote::Entity as Quote};
+use super::data_transfer_objects::{QuoteDTO, TagDTO};
+use ::entity::{quote, quote::Entity as Quote, tag::Entity as Tag};
 use sea_orm::*;
 
 pub struct DataAccess {}
@@ -28,19 +29,37 @@ impl DataAccess {
         Quote::find_by_id(id).one(db).await
     }
 
+    async fn get_quote_with_related_tags(
+        db: &DbConn,
+        quote: quote::Model,
+    ) -> Result<QuoteDTO, DbErr> {
+        let tags = quote.find_related(Tag).all(db).await?;
+
+        Ok(QuoteDTO {
+            name: quote.name,
+            quote: quote.quote,
+            related_tags: tags.into_iter().map(TagDTO::from).collect(),
+        })
+    }
+
     pub async fn get_quotes_in_page(
         db: &DbConn,
         page: u64,
         page_size: u64,
-    ) -> Result<(Vec<quote::Model>, u64), DbErr> {
+    ) -> Result<(Vec<QuoteDTO>, u64), DbErr> {
         let paginator = Quote::find()
             .order_by_asc(quote::Column::Name)
             .paginate(db, page_size);
-        let total = paginator.num_items().await?;
+        let total = paginator.num_pages().await?;
 
-        paginator
-            .fetch_page(page - 1)
-            .await
-            .map(|items| (items, total))
+        let mut result: Vec<QuoteDTO> = Vec::new();
+
+        for quote in paginator.fetch_page(page - 1).await? {
+            let dto = Self::get_quote_with_related_tags(db, quote).await?;
+
+            result.push(dto);
+        }
+
+        Ok((result, total))
     }
 }

@@ -25,6 +25,7 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(integer(QuoteTagAssociation::QuoteId).not_null())
                     .col(integer(QuoteTagAssociation::TagId).not_null())
+                    // source: https://stackoverflow.com/questions/78101516/write-a-m-to-m-relation-in-sea-orm-migration
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk-quote-tag-association-tag-id")
@@ -37,6 +38,7 @@ impl MigrationTrait for Migration {
                             .from(QuoteTagAssociation::Table, QuoteTagAssociation::QuoteId)
                             .to(Quote::Table, Quote::Id),
                     )
+                    // source : https://stackoverflow.com/questions/78101516/write-a-m-to-m-relation-in-sea-orm-migration
                     .primary_key(
                         Index::create()
                             .col(QuoteTagAssociation::QuoteId)
