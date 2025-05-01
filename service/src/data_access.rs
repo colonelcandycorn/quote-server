@@ -1,5 +1,5 @@
 use super::data_transfer_objects::{QuoteDTO, TagDTO};
-use ::entity::{quote, quote::Entity as Quote, tag::Entity as Tag};
+use ::entity::{quote::{self, Entity as Quote}, quote_tag_association, tag::{self, Entity as Tag}};
 use sea_orm::*;
 
 pub struct DataAccess {}
@@ -61,5 +61,30 @@ impl DataAccess {
         }
 
         Ok((result, total))
+    }
+
+    pub async fn create_tag(
+        db: &DbConn,
+        tag: tag::Model,
+    ) -> Result<tag::ActiveModel, DbErr> {
+        tag::ActiveModel {
+            tag: Set(tag.tag.to_owned()),
+            ..Default::default()
+        }
+        .save(db)
+        .await
+    }
+
+    pub async fn create_quote_tag_association(
+        db: &DbConn,
+        quote: quote::Model,
+        tag: tag::Model,
+    ) -> Result<quote_tag_association::ActiveModel, DbErr> {
+        quote_tag_association::ActiveModel {
+            quote_id: Set(quote.id),
+            tag_id: Set(tag.id)
+        }
+        .save(db)
+        .await
     }
 }
