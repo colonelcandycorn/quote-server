@@ -63,6 +63,21 @@ impl DataAccess {
         Ok((result, total))
     }
 
+    pub async fn get_tags(
+        db: &DbConn,
+        tag: String,
+    ) -> Result<Vec<TagDTO>, DbErr> {
+        let tags = Tag::find().filter(tag::Column::Tag.contains(tag)).all(db).await?;
+
+        let mut result: Vec<TagDTO> = Vec::new();
+
+        for tag in tags {
+            result.push(tag.into())
+        }
+
+        Ok(result)
+    }
+
     pub async fn create_tag(
         db: &DbConn,
         tag: tag::Model,
