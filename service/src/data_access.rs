@@ -1,5 +1,9 @@
 use super::data_transfer_objects::{QuoteDTO, TagDTO};
-use ::entity::{quote::{self, Entity as Quote}, quote_tag_association, tag::{self, Entity as Tag}};
+use ::entity::{
+    quote::{self, Entity as Quote},
+    quote_tag_association,
+    tag::{self, Entity as Tag},
+};
 use sea_orm::*;
 
 pub struct DataAccess {}
@@ -63,11 +67,11 @@ impl DataAccess {
         Ok((result, total))
     }
 
-    pub async fn get_tags(
-        db: &DbConn,
-        tag: String,
-    ) -> Result<Vec<TagDTO>, DbErr> {
-        let tags = Tag::find().filter(tag::Column::Tag.contains(tag)).all(db).await?;
+    pub async fn get_tags(db: &DbConn, tag: String) -> Result<Vec<TagDTO>, DbErr> {
+        let tags = Tag::find()
+            .filter(tag::Column::Tag.contains(tag))
+            .all(db)
+            .await?;
 
         let mut result: Vec<TagDTO> = Vec::new();
 
@@ -78,10 +82,7 @@ impl DataAccess {
         Ok(result)
     }
 
-    pub async fn create_tag(
-        db: &DbConn,
-        tag: tag::Model,
-    ) -> Result<tag::ActiveModel, DbErr> {
+    pub async fn create_tag(db: &DbConn, tag: tag::Model) -> Result<tag::ActiveModel, DbErr> {
         tag::ActiveModel {
             tag: Set(tag.tag.to_owned()),
             ..Default::default()
@@ -97,7 +98,7 @@ impl DataAccess {
     ) -> Result<quote_tag_association::ActiveModel, DbErr> {
         quote_tag_association::ActiveModel {
             quote_id: Set(quote.id),
-            tag_id: Set(tag.id)
+            tag_id: Set(tag.id),
         }
         .save(db)
         .await
