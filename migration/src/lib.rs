@@ -2,6 +2,7 @@ pub use sea_orm_migration::prelude::*;
 
 mod m20240424_000001_create_quote_table;
 mod m20250430_133655_create_tags_table;
+mod m20250506_145225_create_author_table;
 
 pub struct Migrator;
 
@@ -11,6 +12,7 @@ impl MigratorTrait for Migrator {
         vec![
             Box::new(m20240424_000001_create_quote_table::Migration),
             Box::new(m20250430_133655_create_tags_table::Migration),
+            Box::new(m20250506_145225_create_author_table::Migration),
         ]
     }
 }
