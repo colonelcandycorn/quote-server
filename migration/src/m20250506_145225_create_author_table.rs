@@ -1,4 +1,8 @@
-use sea_orm_migration::{prelude::*, schema::*, sea_orm::{DbBackend, Statement}};
+use sea_orm_migration::{
+    prelude::*,
+    schema::*,
+    sea_orm::{DbBackend, Statement},
+};
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -14,7 +18,7 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(pk_auto(Author::Id))
                     .col(string(Author::Name))
-                    .to_owned()
+                    .to_owned(),
             )
             .await?;
 
@@ -29,39 +33,33 @@ impl MigrationTrait for Migration {
 
         let db = manager.get_connection();
 
-        db
-            .execute(
-                Statement::from_string(
-                    DbBackend::Sqlite,
-                    r#"
+        db.execute(Statement::from_string(
+            DbBackend::Sqlite,
+            r#"
                     INSERT INTO author (name)
                     SELECT DISTINCT name FROM quote
                     "#
-                    .to_owned(),
-                )
-            )
-            .await?;
+            .to_owned(),
+        ))
+        .await?;
 
-        db
-            .execute(
-                Statement::from_string(
-                    DbBackend::Sqlite,
-                    r#"
+        db.execute(Statement::from_string(
+            DbBackend::Sqlite,
+            r#"
                     UPDATE quote
                     SET author_id = author_tbl.id
                     FROM (SELECT id, name FROM author) as author_tbl
                     WHERE quote.name = author_tbl.name
                     "#
-                    .to_owned(),
-                )
-            )
-            .await?;
+            .to_owned(),
+        ))
+        .await?;
 
         manager
             .rename_table(
                 Table::rename()
                     .table(Quote::Table, QuoteV1::Table)
-                    .to_owned()
+                    .to_owned(),
             )
             .await?;
 
@@ -69,7 +67,7 @@ impl MigrationTrait for Migration {
             .rename_table(
                 Table::rename()
                     .table(QuoteTagAssociation::Table, QuoteTagAssociationV1::Table)
-                    .to_owned()
+                    .to_owned(),
             )
             .await?;
 
@@ -87,7 +85,7 @@ impl MigrationTrait for Migration {
                             .from(Quote::Table, Quote::AuthorId)
                             .to(Author::Table, Author::Id),
                     )
-                    .to_owned()
+                    .to_owned(),
             )
             .await?;
 
@@ -121,31 +119,25 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
-        db
-            .execute(
-                Statement::from_string(
-                    DbBackend::Sqlite,
-                    r#"
+        db.execute(Statement::from_string(
+            DbBackend::Sqlite,
+            r#"
                     INSERT INTO quote (author_id, quote)
                     SELECT author_id, quote FROM quote_v1
                     "#
-                    .to_owned(),
-                )
-            )
-            .await?;
+            .to_owned(),
+        ))
+        .await?;
 
-        db
-            .execute(
-                Statement::from_string(
-                    DbBackend::Sqlite,
-                    r#"
+        db.execute(Statement::from_string(
+            DbBackend::Sqlite,
+            r#"
                     INSERT INTO quote_tag_association (quote_id, tag_id)
                     SELECT quote_id, tag_id from quote_tag_association_v1
                     "#
-                    .to_owned(),
-                )
-            )
-            .await?;
+            .to_owned(),
+        ))
+        .await?;
 
         manager
             .drop_table(Table::drop().table(QuoteV1::Table).to_owned())
@@ -162,18 +154,17 @@ impl MigrationTrait for Migration {
         manager
             .alter_table(
                 Table::alter()
-                .table(Quote::Table)
-                .add_column(string(Quote::Name).default(""))
-                .to_owned()
+                    .table(Quote::Table)
+                    .add_column(string(Quote::Name).default(""))
+                    .to_owned(),
             )
             .await?;
 
         let db = manager.get_connection();
 
-        db.execute(
-            Statement::from_string(
-                DbBackend::Sqlite,
-                r#"
+        db.execute(Statement::from_string(
+            DbBackend::Sqlite,
+            r#"
                 UPDATE quote
                 SET name = (
                     SELECT author.name
@@ -181,16 +172,15 @@ impl MigrationTrait for Migration {
                     WHERE author.id = quote.author_id
                 );
                 "#
-                .to_owned()
-            )
-        )
+            .to_owned(),
+        ))
         .await?;
 
         manager
             .rename_table(
                 Table::rename()
                     .table(Quote::Table, QuoteV1::Table)
-                    .to_owned()
+                    .to_owned(),
             )
             .await?;
 
@@ -206,18 +196,15 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
-        db
-            .execute(
-                Statement::from_string(
-                    DbBackend::Sqlite,
-                    r#"
+        db.execute(Statement::from_string(
+            DbBackend::Sqlite,
+            r#"
                     INSERT INTO quote (name, quote)
                     SELECT name, quote FROM quote_v1
                     "#
-                    .to_owned(),
-                )
-            )
-            .await?;
+            .to_owned(),
+        ))
+        .await?;
 
         manager
             .drop_table(Table::drop().table(QuoteV1::Table).to_owned())
