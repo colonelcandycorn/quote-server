@@ -4,7 +4,7 @@
 <ul>
     {% for quote in quotes %}
     <li>
-        {{ quote.quote}} <br> {{ quote.name }}
+        {{ quote.quote}} <br> {{ quote.author.name }}
         {% for tag in quote.related_tags %}
         {% endfor %}
     </li>

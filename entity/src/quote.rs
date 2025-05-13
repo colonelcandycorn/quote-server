@@ -9,14 +9,28 @@ pub struct Model {
     #[sea_orm(primary_key)]
     #[serde(skip_deserializing)]
     pub id: i32,
-    pub name: String,
     pub quote: String,
+    pub author_id: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
+    #[sea_orm(
+        belongs_to = "super::author::Entity",
+        from = "Column::AuthorId",
+        to = "super::author::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    Author,
     #[sea_orm(has_many = "super::quote_tag_association::Entity")]
     QuoteTagAssociation,
+}
+
+impl Related<super::author::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Author.def()
+    }
 }
 
 impl Related<super::quote_tag_association::Entity> for Entity {

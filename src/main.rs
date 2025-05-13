@@ -5,7 +5,7 @@ use sea_orm::Database;
 use sea_orm::DatabaseConnection;
 use serde::Deserialize;
 use service::data_access::DataAccess;
-use service::data_transfer_objects::QuoteDTO;
+use service::data_transfer_objects::{QuoteCreateDTO, QuoteDTO};
 use std::fs::File;
 use std::io::BufReader;
 use tower_http::trace;
@@ -37,10 +37,10 @@ struct Args {
     init: bool,
 }
 
-fn read_quotes_from_file(file_path: &str) -> Result<Vec<QuoteModel>, Box<dyn std::error::Error>> {
+fn read_quotes_from_file(file_path: &str) -> Result<Vec<QuoteCreateDTO>, Box<dyn std::error::Error>> {
     let file = File::open(file_path)?;
     let reader = BufReader::new(file);
-    let quotes: Vec<QuoteModel> = serde_json::from_reader(reader)?;
+    let quotes: Vec<QuoteCreateDTO> = serde_json::from_reader(reader)?;
     Ok(quotes)
 }
 
@@ -118,8 +118,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     if args.init {
         let quotes = read_quotes_from_file("./static/assets/quotes.json")?;
         for quote in quotes {
-            let active_model = DataAccess::create_quote(&db, quote).await?;
-            println!("Created quote: {:?}", active_model);
+            let quote_dto = DataAccess::create_quote(&db, quote).await?;
+            println!("Created quote: {:?}", quote_dto);
         }
     }
 
