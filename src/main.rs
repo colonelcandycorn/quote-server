@@ -37,7 +37,9 @@ struct Args {
     init: bool,
 }
 
-fn read_quotes_from_file(file_path: &str) -> Result<Vec<QuoteCreateDTO>, Box<dyn std::error::Error>> {
+fn read_quotes_from_file(
+    file_path: &str,
+) -> Result<Vec<QuoteCreateDTO>, Box<dyn std::error::Error>> {
     let file = File::open(file_path)?;
     let reader = BufReader::new(file);
     let quotes: Vec<QuoteCreateDTO> = serde_json::from_reader(reader)?;

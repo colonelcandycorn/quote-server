@@ -1,9 +1,9 @@
-use super::data_transfer_objects::{QuoteCreateDTO, TagCreateDTO, QuoteDTO, TagDTO, AuthorDTO};
+use super::data_transfer_objects::{AuthorDTO, QuoteCreateDTO, QuoteDTO, TagCreateDTO, TagDTO};
 use ::entity::{
+    author::{self, Entity as Author},
     quote::{self, Entity as Quote},
     quote_tag_association,
     tag::{self, Entity as Tag},
-    author::{self, Entity as Author}
 };
 use sea_orm::*;
 
@@ -23,7 +23,7 @@ impl DataAccess {
 
     pub async fn get_or_create_author_model(
         db: &DbConn,
-        author_name: String
+        author_name: String,
     ) -> Result<AuthorDTO, DbErr> {
         let author_name_lower = author_name.to_lowercase();
 
@@ -47,19 +47,16 @@ impl DataAccess {
             ..Default::default()
         }
         .insert(db)
-        .await?.into())
-
+        .await?
+        .into())
     }
 
-    // QUOTE 
+    // QUOTE
     // id
     // quote
     // author_id
 
-    pub async fn create_quote(
-        db: &DbConn,
-        quote: QuoteCreateDTO,
-    ) -> Result<QuoteDTO, DbErr> {
+    pub async fn create_quote(db: &DbConn, quote: QuoteCreateDTO) -> Result<QuoteDTO, DbErr> {
         let author_dto = DataAccess::get_or_create_author_model(db, quote.author_name).await?;
 
         let quote_model = quote::ActiveModel {
@@ -75,7 +72,8 @@ impl DataAccess {
         for tag in quote.related_tags {
             let tag_dto = DataAccess::get_tag_or_create_tag(db, tag.tag).await?;
 
-            let quote_tag_association = DataAccess::create_quote_tag_association(db, &quote_model, &tag_dto).await?;
+            let quote_tag_association =
+                DataAccess::create_quote_tag_association(db, &quote_model, &tag_dto).await?;
 
             related_tags.push(tag_dto);
         }
@@ -84,7 +82,7 @@ impl DataAccess {
             id: quote_model.id,
             quote: quote_model.quote,
             related_tags: related_tags,
-            author: author_dto
+            author: author_dto,
         };
 
         Ok(dto)
@@ -138,7 +136,7 @@ impl DataAccess {
         let search_results = DataAccess::get_tags(db, &tag_lower).await?;
 
         if let Some(tag) = search_results.into_iter().next() {
-            return Ok(tag.into())
+            return Ok(tag.into());
         }
 
         let model = DataAccess::create_tag(db, &tag_lower).await?;

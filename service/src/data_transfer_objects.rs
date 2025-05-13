@@ -15,7 +15,6 @@ pub struct QuoteDTO {
     pub author: AuthorDTO,
 }
 
-
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct TagCreateDTO {
     pub tag: String,
