@@ -1,4 +1,4 @@
-use super::data_transfer_objects::{AuthorDTO, QuoteCreateDTO, QuoteDTO, TagCreateDTO, TagDTO};
+use super::data_transfer_objects::{AuthorDTO, QuoteCreateDTO, QuoteDTO, TagDTO};
 use ::entity::{
     author::{self, Entity as Author},
     quote::{self, Entity as Quote},
@@ -20,23 +20,59 @@ impl DataAccess {
     // AUTHOR
     // id
     // name
+    pub async fn get_tag_with_related_quotes(
+        db: &DbConn,
+        tag_id: i32,
+        page: u64,
+        page_size: u64
+    ) -> Result<Option<(TagDTO, Vec<QuoteDTO>, u64)>, DbErr> {
+        let tag = Tag::find_by_id(tag_id).one(db).await?;
+
+        if let Some(tag) = tag {
+            let quotes_query = tag.find_related(Quote);
+            
+            let paginator = quotes_query.paginate(db, page_size);
+
+            let total = paginator.num_pages().await?;
+
+            let mut result: Vec<QuoteDTO> = Vec::new();
+
+            for quote in paginator.fetch_page(page - 1).await? {
+                let dto = Self::get_quote_with_related_tags_and_author(db, quote).await?;
+    
+                result.push(dto);
+            }
+
+            return Ok(Some((tag.into(), result, total)))
+        }
+
+        Ok(None)
+    }
 
     pub async fn get_author_with_related_quotes(
         db: &DbConn,
         author_id: i32,
-    ) -> Result<Option<(AuthorDTO, Vec<QuoteDTO>)>, DbErr> {
+        page: u64,
+        page_size: u64,
+    ) -> Result<Option<(AuthorDTO, Vec<QuoteDTO>, u64)>, DbErr> {
         let author = Author::find_by_id(author_id).one(db).await?;
         
         if let Some(author) = author {
-            let quotes = author.find_related(Quote).all(db).await?;
+            let quotes_query = author.find_related(Quote);
+            
+            let paginator = quotes_query.paginate(db, page_size);
+
+            let total = paginator.num_pages().await?;
 
             let mut result: Vec<QuoteDTO> = Vec::new();
 
-            for quote in quotes {
-                result.push(DataAccess::get_quote_with_related_tags_and_author(db, quote).await?)
+            for quote in paginator.fetch_page(page - 1).await? {
+                let dto = Self::get_quote_with_related_tags_and_author(db, quote).await?;
+    
+                result.push(dto);
             }
 
-            return Ok(Some((author.into(), result)));            
+            return Ok(Some((author.into(), result, total)))            
         }
 
         Ok(None)
@@ -106,7 +142,7 @@ impl DataAccess {
         for tag in quote.related_tags {
             let tag_dto = DataAccess::get_tag_or_create_tag(db, tag.tag).await?;
 
-            let quote_tag_association =
+            let _quote_tag_association =
                 DataAccess::create_quote_tag_association(db, &quote_model, &tag_dto).await?;
 
             related_tags.push(tag_dto);

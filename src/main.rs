@@ -1,6 +1,5 @@
 use askama::Template;
 use clap::Parser;
-use entity::quote::Model as QuoteModel;
 use sea_orm::Database;
 use sea_orm::DatabaseConnection;
 use serde::Deserialize;
@@ -23,6 +22,7 @@ use axum::{
 #[template(path = "quotes.html")]
 struct QuotesTemplate {
     quotes: Vec<QuoteDTO>,
+    pages: u64,
 }
 
 #[derive(Parser, Debug)]
@@ -96,8 +96,11 @@ async fn get_quotes(
     let page_size = params.page_size.unwrap_or(10);
 
     match DataAccess::get_quotes_in_page(&state.db_conn, page, page_size).await {
-        Ok((quotes, _)) => {
-            let quotes_template = QuotesTemplate { quotes };
+        Ok((quotes, pages)) => {
+            let quotes_template = QuotesTemplate { 
+                quotes,
+                pages
+            };
 
             Ok(Html(quotes_template.render()?))
         }

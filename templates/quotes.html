@@ -4,11 +4,24 @@
 <ul>
     {% for quote in quotes %}
     <li>
-        {{ quote.quote}} <br> {{ quote.author.name }}
-        {% for tag in quote.related_tags %}
-        {% endfor %}
+        {{ quote.quote}} <br> {{ quote.author.name }} <br>
+        {% if quote.related_tags.len() == 0 %}
+        No tags
+        {% else %}
+            {% for tag in quote.related_tags %}
+                {% if loop.last %}
+                    {{ tag.tag }},
+                {% else %}
+                    {{ tag.tag }}
+                {% endif %}
+            {% endfor %}
+        {% endif %}
     </li>
     {% endfor %}
 </ul>
+
+{% for index in 1..=pages %}
+<a>{{index}}</a>
+{% endfor %}
 
 {% endblock content %}
