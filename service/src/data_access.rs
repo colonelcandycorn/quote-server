@@ -21,6 +21,40 @@ impl DataAccess {
     // id
     // name
 
+    pub async fn get_author_with_related_quotes(
+        db: &DbConn,
+        author_id: i32,
+    ) -> Result<Option<(AuthorDTO, Vec<QuoteDTO>)>, DbErr> {
+        let author = Author::find_by_id(author_id).one(db).await?;
+        
+        if let Some(author) = author {
+            let quotes = author.find_related(Quote).all(db).await?;
+
+            let mut result: Vec<QuoteDTO> = Vec::new();
+
+            for quote in quotes {
+                result.push(DataAccess::get_quote_with_related_tags_and_author(db, quote).await?)
+            }
+
+            return Ok(Some((author.into(), result)));            
+        }
+
+        Ok(None)
+    }
+
+    pub async fn get_author(
+        db: &DbConn,
+        author_id: i32,
+    ) -> Result<Option<AuthorDTO>, DbErr> {
+        let result = Author::find_by_id(author_id).one(db).await?;
+
+        if let Some(result) = result {
+            return Ok(Some(result.into()))
+        }
+
+        Ok(None)
+    }
+
     pub async fn get_or_create_author_model(
         db: &DbConn,
         author_name: String,
