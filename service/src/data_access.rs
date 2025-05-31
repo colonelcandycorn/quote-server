@@ -24,13 +24,13 @@ impl DataAccess {
         db: &DbConn,
         tag_id: i32,
         page: u64,
-        page_size: u64
+        page_size: u64,
     ) -> Result<Option<(TagDTO, Vec<QuoteDTO>, u64)>, DbErr> {
         let tag = Tag::find_by_id(tag_id).one(db).await?;
 
         if let Some(tag) = tag {
             let quotes_query = tag.find_related(Quote);
-            
+
             let paginator = quotes_query.paginate(db, page_size);
 
             let total = paginator.num_pages().await?;
@@ -39,11 +39,11 @@ impl DataAccess {
 
             for quote in paginator.fetch_page(page - 1).await? {
                 let dto = Self::get_quote_with_related_tags_and_author(db, quote).await?;
-    
+
                 result.push(dto);
             }
 
-            return Ok(Some((tag.into(), result, total)))
+            return Ok(Some((tag.into(), result, total)));
         }
 
         Ok(None)
@@ -56,10 +56,10 @@ impl DataAccess {
         page_size: u64,
     ) -> Result<Option<(AuthorDTO, Vec<QuoteDTO>, u64)>, DbErr> {
         let author = Author::find_by_id(author_id).one(db).await?;
-        
+
         if let Some(author) = author {
             let quotes_query = author.find_related(Quote);
-            
+
             let paginator = quotes_query.paginate(db, page_size);
 
             let total = paginator.num_pages().await?;
@@ -68,24 +68,21 @@ impl DataAccess {
 
             for quote in paginator.fetch_page(page - 1).await? {
                 let dto = Self::get_quote_with_related_tags_and_author(db, quote).await?;
-    
+
                 result.push(dto);
             }
 
-            return Ok(Some((author.into(), result, total)))            
+            return Ok(Some((author.into(), result, total)));
         }
 
         Ok(None)
     }
 
-    pub async fn get_author(
-        db: &DbConn,
-        author_id: i32,
-    ) -> Result<Option<AuthorDTO>, DbErr> {
+    pub async fn get_author(db: &DbConn, author_id: i32) -> Result<Option<AuthorDTO>, DbErr> {
         let result = Author::find_by_id(author_id).one(db).await?;
 
         if let Some(result) = result {
-            return Ok(Some(result.into()))
+            return Ok(Some(result.into()));
         }
 
         Ok(None)
@@ -198,7 +195,7 @@ impl DataAccess {
         }
 
         if result.len() == 0 {
-            return Ok(None)
+            return Ok(None);
         }
 
         Ok(Some((result, total)))

@@ -1,11 +1,10 @@
+use api::template_router;
 use clap::Parser;
 use sea_orm::Database;
 use service::data_access::DataAccess;
-use service::data_transfer_objects::{QuoteCreateDTO};
+use service::data_transfer_objects::QuoteCreateDTO;
 use std::fs::File;
 use std::io::BufReader;
-use api::template_router;
-
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]

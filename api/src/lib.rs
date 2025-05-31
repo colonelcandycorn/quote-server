@@ -4,9 +4,7 @@ pub mod template;
 use sea_orm::DatabaseConnection;
 use tower_http::trace;
 
-use axum::{
-    routing::{get, Router},
-};
+use axum::routing::{get, Router};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -19,11 +17,10 @@ impl AppState {
     }
 }
 
-pub fn template_router(state: AppState) -> Router<()>
-{
+pub fn template_router(state: AppState) -> Router<()> {
     let trace_layer = trace::TraceLayer::new_for_http()
-    .make_span_with(trace::DefaultMakeSpan::new().level(tracing::Level::INFO))
-    .on_response(trace::DefaultOnResponse::new().level(tracing::Level::INFO));
+        .make_span_with(trace::DefaultMakeSpan::new().level(tracing::Level::INFO))
+        .on_response(trace::DefaultOnResponse::new().level(tracing::Level::INFO));
 
     Router::new()
         .route("/", get(template::get_root))

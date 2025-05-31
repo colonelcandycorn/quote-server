@@ -1,7 +1,7 @@
 use askama::Template;
 use serde::Deserialize;
 use service::data_access::DataAccess;
-use service::data_transfer_objects::{QuoteDTO};
+use service::data_transfer_objects::QuoteDTO;
 
 use super::AppState;
 
@@ -67,10 +67,7 @@ pub async fn get_quotes(
 
     match DataAccess::get_quotes_in_page(&state.db_conn, page, page_size).await {
         Ok(Some((quotes, pages))) => {
-            let quotes_template = QuotesTemplate { 
-                quotes,
-                pages
-            };
+            let quotes_template = QuotesTemplate { quotes, pages };
 
             Ok(Html(quotes_template.render()?))
         }
