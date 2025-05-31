@@ -43,6 +43,10 @@ impl DataAccess {
                 result.push(dto);
             }
 
+            if result.is_empty() {
+                return Ok(None);
+            }
+
             return Ok(Some((tag.into(), result, total)));
         }
 
@@ -70,6 +74,10 @@ impl DataAccess {
                 let dto = Self::get_quote_with_related_tags_and_author(db, quote).await?;
 
                 result.push(dto);
+            }
+
+            if result.is_empty() {
+                return Ok(None);
             }
 
             return Ok(Some((author.into(), result, total)));

@@ -25,6 +25,8 @@ pub fn template_router(state: AppState) -> Router<()> {
     Router::new()
         .route("/", get(template::get_root))
         .route("/quotes", get(template::get_quotes))
+        .route("/tags/{tag_id}", get(template::get_tag_and_associated_quotes))
+        .route("/authors/{author_id}", get(template::get_author_and_associated_quotes))
         .layer(trace_layer)
         .with_state(state)
 }

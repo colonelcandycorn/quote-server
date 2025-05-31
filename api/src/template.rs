@@ -6,7 +6,7 @@ use service::data_transfer_objects::QuoteDTO;
 use super::AppState;
 
 use axum::{
-    extract::{Query, State},
+    extract::{Query, State, Path},
     http::StatusCode,
     response::{Html, IntoResponse, Redirect, Response},
 };
@@ -14,6 +14,22 @@ use axum::{
 #[derive(Template)]
 #[template(path = "./quotes.html")]
 struct QuotesTemplate {
+    quotes: Vec<QuoteDTO>,
+    pages: u64,
+}
+
+#[derive(Template)]
+#[template(path = "./tag.html")]
+struct TagTemplate {
+    tag: service::data_transfer_objects::TagDTO,
+    quotes: Vec<QuoteDTO>,
+    pages: u64,
+}
+
+#[derive(Template)]
+#[template(path = "./author.html")]
+struct AuthorTemplate {
+    author: service::data_transfer_objects::AuthorDTO,
     quotes: Vec<QuoteDTO>,
     pages: u64,
 }
@@ -68,6 +84,46 @@ pub async fn get_quotes(
     match DataAccess::get_quotes_in_page(&state.db_conn, page, page_size).await {
         Ok(Some((quotes, pages))) => {
             let quotes_template = QuotesTemplate { quotes, pages };
+
+            Ok(Html(quotes_template.render()?))
+        }
+        Ok(None) => Err(AppError::NotFound),
+        Err(e) => Err(AppError::Database(e)),
+    }
+}
+
+#[axum::debug_handler]
+pub async fn get_tag_and_associated_quotes(
+    state: State<AppState>,
+    Path(tag_id): Path<i32>,
+    Query(params): Query<Params>,
+) -> Result<impl IntoResponse, AppError> {
+    let page = params.page.unwrap_or(1);
+    let page_size = params.page_size.unwrap_or(10);
+
+    match DataAccess::get_tag_with_related_quotes(&state.db_conn, tag_id, page, page_size).await {
+        Ok(Some((tag, quotes, pages))) => {
+            let quotes_template = TagTemplate { tag, quotes, pages };
+
+            Ok(Html(quotes_template.render()?))
+        }
+        Ok(None) => Err(AppError::NotFound),
+        Err(e) => Err(AppError::Database(e)),
+    }
+}
+
+#[axum::debug_handler]
+pub async fn get_author_and_associated_quotes(
+    state: State<AppState>,
+    Path(author_id): Path<i32>,
+    Query(params): Query<Params>,
+) -> Result<impl IntoResponse, AppError> {
+    let page = params.page.unwrap_or(1);
+    let page_size = params.page_size.unwrap_or(10);
+
+    match DataAccess::get_author_with_related_quotes(&state.db_conn, author_id, page, page_size).await {
+        Ok(Some((author, quotes, pages))) => {
+            let quotes_template = AuthorTemplate { author: author.into(), quotes, pages };
 
             Ok(Html(quotes_template.render()?))
         }

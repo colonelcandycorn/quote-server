@@ -1,0 +1,15 @@
+{% extends "quotes.html" %}
+
+{% block title %}
+Author - Sarah's Quote Server
+{% endblock title %}
+
+{% block Header %}
+<h1>Author: {{ author.name }}</h1>
+{% endblock Header %}
+
+{% block pagination %}
+{% for index in 1..=pages %}
+<a href="/authors/{{ author.id }}?page={{ index }}">{{ index }}</a>
+{% endfor %}
+{% endblock pagination %}

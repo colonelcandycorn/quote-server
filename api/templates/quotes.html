@@ -1,10 +1,17 @@
 {% extends "base.html" %}
 
+{% block title %}
+Quotes - Sarah's Quote Server
+{% endblock title %}
+
+{% block header %}
+{% endblock header %}
 {% block content %}
+
 <ul>
     {% for quote in quotes %}
     <li>
-        {{ quote.quote}} <br> {{ quote.author.name }} <br>
+        {{ quote.quote}} <br> <a href ="/authors/{{ quote.author.id }}">{{ quote.author.name }}</a><br>
         {% if quote.related_tags.len() == 0 %}
         No tags
         {% else %}
@@ -19,9 +26,9 @@
     </li>
     {% endfor %}
 </ul>
-
+{% endblock content %}
+{% block pagination %}
 {% for index in 1..=pages %}
 <a href="/quotes?page={{index}}">{{index}}</a>
 {% endfor %}
-
-{% endblock content %}
+{% endblock pagination %}

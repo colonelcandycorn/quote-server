@@ -3,10 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sarah's Quote Server</title>
+    {% block title %}
+    {% endblock title %}
 </head>
 <body>
+    {% block header %}
+    {% endblock header %}
     {% block content %}
     {% endblock content %}
+    {% block pagination %}
+    {% endblock pagination %}
 </body>
 </html>

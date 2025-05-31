@@ -1,0 +1,15 @@
+{% extends "quotes.html" %}
+
+{% block title %}
+Tags - Sarah's Quote Server
+{% endblock title %}
+
+{% block Header %}
+<h1>Tag: {{ tag.tag }}</h1>
+{% endblock Header %}
+
+{% block pagination %}
+{% for index in 1..=pages %}
+<a href="/tags/{{ tag.id }}?page={{ index }}">{{ index }}</a>
+{% endfor %}
+{% endblock pagination %}
