@@ -148,7 +148,7 @@ impl DataAccess {
         let dto = QuoteDTO {
             id: quote_model.id,
             quote: quote_model.quote,
-            related_tags: related_tags,
+            related_tags,
             author: author_dto,
         };
 
@@ -194,7 +194,7 @@ impl DataAccess {
             result.push(dto);
         }
 
-        if result.len() == 0 {
+        if result.is_empty() {
             return Ok(None);
         }
 
