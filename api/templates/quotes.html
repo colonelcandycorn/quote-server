@@ -21,7 +21,7 @@
 </ul>
 
 {% for index in 1..=pages %}
-<a>{{index}}</a>
+<a href="/quotes?page={{index}}">{{index}}</a>
 {% endfor %}
 
 {% endblock content %}

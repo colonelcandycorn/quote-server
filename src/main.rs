@@ -1,29 +1,11 @@
-use askama::Template;
 use clap::Parser;
 use sea_orm::Database;
-use sea_orm::DatabaseConnection;
-use serde::Deserialize;
 use service::data_access::DataAccess;
-use service::data_transfer_objects::{QuoteCreateDTO, QuoteDTO};
+use service::data_transfer_objects::{QuoteCreateDTO};
 use std::fs::File;
 use std::io::BufReader;
-use tower_http::trace;
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use api::template_router;
 
-use axum::{
-    extract::{Query, State},
-    http::StatusCode,
-    response::{Html, IntoResponse, Redirect, Response},
-    routing::get,
-    Router,
-};
-
-#[derive(Template)]
-#[template(path = "quotes.html")]
-struct QuotesTemplate {
-    quotes: Vec<QuoteDTO>,
-    pages: u64,
-}
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -46,72 +28,6 @@ fn read_quotes_from_file(
     Ok(quotes)
 }
 
-#[derive(Clone)]
-struct AppState {
-    db_conn: DatabaseConnection,
-}
-
-#[derive(Deserialize)]
-struct Params {
-    page: Option<u64>,
-    page_size: Option<u64>,
-}
-
-/*
-source: https://askama.readthedocs.io/en/stable/frameworks.html
-*/
-#[derive(Debug, displaydoc::Display, thiserror::Error)]
-enum AppError {
-    /// could not render template
-    Render(#[from] askama::Error),
-    /// Had trouble with database
-    Database(#[from] sea_orm::DbErr),
-}
-
-impl IntoResponse for AppError {
-    fn into_response(self) -> Response {
-        #[derive(Debug, Template)]
-        #[template(path = "error.html")]
-        struct Tmpl {}
-
-        let status = match &self {
-            AppError::Render(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            AppError::Database(_) => StatusCode::INTERNAL_SERVER_ERROR,
-        };
-        let tmpl = Tmpl {};
-        if let Ok(body) = tmpl.render() {
-            (status, Html(body)).into_response()
-        } else {
-            (status, "Something went wrong").into_response()
-        }
-    }
-}
-
-#[axum::debug_handler]
-async fn get_quotes(
-    state: State<AppState>,
-    Query(params): Query<Params>,
-) -> Result<impl IntoResponse, AppError> {
-    let page = params.page.unwrap_or(1);
-    let page_size = params.page_size.unwrap_or(10);
-
-    match DataAccess::get_quotes_in_page(&state.db_conn, page, page_size).await {
-        Ok((quotes, pages)) => {
-            let quotes_template = QuotesTemplate { 
-                quotes,
-                pages
-            };
-
-            Ok(Html(quotes_template.render()?))
-        }
-        Err(e) => Err(AppError::Database(e)),
-    }
-}
-
-async fn get_root() -> Response {
-    Redirect::to("/quotes").into_response()
-}
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Deal with the Arguments
@@ -128,27 +44,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    // taken from: https://github.com/pdx-cs-rust-web/knock-knock-2/blob/main/src/main.rs
-    // Set up Tracing
-    tracing_subscriber::registry()
-        .with(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "kk2=debug,info".into()),
-        )
-        .with(tracing_subscriber::fmt::layer())
-        .init();
+    let state = api::AppState::new(db);
 
-    let trace_layer = trace::TraceLayer::new_for_http()
-        .make_span_with(trace::DefaultMakeSpan::new().level(tracing::Level::INFO))
-        .on_response(trace::DefaultOnResponse::new().level(tracing::Level::INFO));
-
-    let state = AppState { db_conn: db };
-
-    let app = Router::new()
-        .route("/", get(get_root))
-        .route("/quotes", get(get_quotes))
-        .layer(trace_layer)
-        .with_state(state);
+    let app = template_router(state);
 
     let addr = "127.0.0.1:3000";
 

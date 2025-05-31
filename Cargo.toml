@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [workspace]
-members = [".", "entity", "migration", "service"]
+members = [".", "api", "entity", "migration", "service"]
 
 [dependencies]
 askama = "0.14.0"
@@ -16,6 +16,7 @@ sea-orm = { version = "1.1.10", features = [ "sqlx-sqlite", "runtime-async-std-n
 clap = { version = "4.5.37", features = ["derive"] }
 entity = { path = "./entity" }
 service = { path = "./service" }
+api = { path = "./api" }
 thiserror = "2.0.12"
 displaydoc = "0.2.5"
 tower-http = { version = "0.6.2", features = ["trace"] }

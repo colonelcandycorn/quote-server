@@ -115,6 +115,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "api"
+version = "0.1.0"
+dependencies = [
+ "askama",
+ "axum",
+ "displaydoc",
+ "sea-orm",
+ "serde",
+ "serde_json",
+ "service",
+ "thiserror",
+ "tower-http",
+ "trace",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "arrayvec"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2124,6 +2142,7 @@ dependencies = [
 name = "quote-server"
 version = "0.1.0"
 dependencies = [
+ "api",
  "askama",
  "axum",
  "clap",

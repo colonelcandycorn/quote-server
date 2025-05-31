@@ -181,7 +181,7 @@ impl DataAccess {
         db: &DbConn,
         page: u64,
         page_size: u64,
-    ) -> Result<(Vec<QuoteDTO>, u64), DbErr> {
+    ) -> Result<Option<(Vec<QuoteDTO>, u64)>, DbErr> {
         let query = Quote::find()
             .join(JoinType::LeftJoin, quote::Relation::Author.def())
             .order_by(author::Column::Name, Order::Asc);
@@ -197,7 +197,11 @@ impl DataAccess {
             result.push(dto);
         }
 
-        Ok((result, total))
+        if result.len() == 0 {
+            return Ok(None)
+        }
+
+        Ok(Some((result, total)))
     }
 
     // TAGS
