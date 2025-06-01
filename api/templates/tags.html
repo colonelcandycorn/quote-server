@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}
+<title>Tags</title>
+{% endblock title %}
+
+{% block header %}
+<h1>Tags</h1>
+{% endblock %}
+
+{% block content %}
+<ul>
+    {% for tag in tags %}
+    <li>
+        <a href="/tags/{{ tag.id }}">{{ tag.tag }}</a>
+    </li>
+    {% endfor %}
+</ul>
+{% if tags.len() == 0 %}
+<p>No Tags found.</p>
+{% endif %}
+{% endblock content %}
+
+{% block pagination %}
+{% for index in 1..=pages %}
+<a href="/tags?page={{ index }}">{{ index }}</a>
+{% endfor %}
+{% endblock pagination %}

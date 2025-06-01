@@ -209,6 +209,52 @@ impl DataAccess {
         Ok(Some((result, total)))
     }
 
+    pub async fn get_tags_in_page(
+        db: &DbConn,
+        page: u64,
+        page_size: u64,
+    ) -> Result<Option<(Vec<TagDTO>, u64)>, DbErr> {
+        let query = Tag::find().order_by(tag::Column::Tag, Order::Asc);
+
+        let paginator = query.paginate(db, page_size);
+        let total = paginator.num_pages().await?;
+
+        let mut result: Vec<TagDTO> = Vec::new();
+
+        for tag in paginator.fetch_page(page - 1).await? {
+            result.push(tag.into());
+        }
+
+        if result.is_empty() {
+            return Ok(None);
+        }
+
+        Ok(Some((result, total)))
+    }
+
+    pub async fn get_authors_in_page(
+        db: &DbConn,
+        page: u64,
+        page_size: u64,
+    ) -> Result<Option<(Vec<AuthorDTO>, u64)>, DbErr> {
+        let query = Author::find().order_by(author::Column::Name, Order::Asc);
+
+        let paginator = query.paginate(db, page_size);
+        let total = paginator.num_pages().await?;
+
+        let mut result: Vec<AuthorDTO> = Vec::new();
+
+        for author in paginator.fetch_page(page - 1).await? {
+            result.push(author.into());
+        }
+
+        if result.is_empty() {
+            return Ok(None);
+        }
+
+        Ok(Some((result, total)))
+    }
+
     // TAGS
     pub async fn get_tag_or_create_tag(db: &DbConn, tag: String) -> Result<TagDTO, DbErr> {
         let tag_lower = tag.to_lowercase();

@@ -2,6 +2,8 @@ use askama::Template;
 use serde::Deserialize;
 use service::data_access::DataAccess;
 use service::data_transfer_objects::QuoteDTO;
+use service::data_transfer_objects::AuthorDTO;
+use service::data_transfer_objects::TagDTO;
 
 use super::AppState;
 
@@ -34,6 +36,20 @@ struct AuthorTemplate {
     pages: u64,
 }
 
+#[derive(Template)]
+#[template(path = "./authors.html")]
+struct AuthorsTemplate {
+    authors: Vec<AuthorDTO>,
+    pages: u64
+}
+
+#[derive(Template)]
+#[template(path = "./tags.html")]
+struct TagsTemplate {
+    tags: Vec<TagDTO>,
+    pages: u64,
+}
+
 #[derive(Deserialize)]
 pub struct Params {
     page: Option<u64>,
@@ -55,16 +71,22 @@ pub enum AppError {
 
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
+        
         #[derive(Debug, Template)]
         #[template(path = "./error.html")]
-        struct Tmpl {}
-
-        let status = match &self {
-            AppError::Render(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            AppError::Database(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            AppError::NotFound => StatusCode::NOT_FOUND,
+        struct ErrorTemplate<'a> {
+            status_code: &'a str,
+        }
+        
+        let (status, status_string) = match &self {
+            AppError::Render(_) => (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error"),
+            AppError::Database(_) => (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error"),
+            AppError::NotFound => (StatusCode::NOT_FOUND, "Not Found"),
         };
-        let tmpl = Tmpl {};
+        let tmpl = ErrorTemplate {
+            status_code: status_string,
+        };
+        
         if let Ok(body) = tmpl.render() {
             (status, Html(body)).into_response()
         } else {
@@ -128,6 +150,50 @@ pub async fn get_author_and_associated_quotes(
             Ok(Html(quotes_template.render()?))
         }
         Ok(None) => Err(AppError::NotFound),
+        Err(e) => Err(AppError::Database(e)),
+    }
+}
+
+#[axum::debug_handler]
+pub async fn get_authors (
+    state: State<AppState>,
+    Query(params): Query<Params>,
+) -> Result<impl IntoResponse, AppError> {
+    let page = params.page.unwrap_or(1);
+    let page_size = params.page_size.unwrap_or(10);
+
+    match DataAccess::get_authors_in_page(&state.db_conn, page, page_size).await {
+        Ok(Some((authors, pages))) => {
+            let authors_template = AuthorsTemplate { authors, pages };
+
+            Ok(Html(authors_template.render()?))
+        }
+        Ok(None) => {
+            let authors_template = AuthorsTemplate { authors: Vec::new(), pages: 0 };
+            Ok(Html(authors_template.render()?))
+        },
+        Err(e) => Err(AppError::Database(e)),
+    }
+}
+
+#[axum::debug_handler]
+pub async fn get_tags(
+    state: State<AppState>,
+    Query(params): Query<Params>,
+) -> Result<impl IntoResponse, AppError> {
+    let page = params.page.unwrap_or(1);
+    let page_size = params.page_size.unwrap_or(10);
+
+    match DataAccess::get_tags_in_page(&state.db_conn, page, page_size).await {
+        Ok(Some((tags, pages))) => {
+            let tags_template = TagsTemplate { tags, pages };
+
+            Ok(Html(tags_template.render()?))
+        }
+        Ok(None) => {
+            let tags_template = TagsTemplate { tags: Vec::new(), pages: 0 };
+            Ok(Html(tags_template.render()?))
+        },
         Err(e) => Err(AppError::Database(e)),
     }
 }

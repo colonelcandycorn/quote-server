@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}
+<title>Authors</title>
+{% endblock title %}
+
+{% block header %}
+<h1>Authors</h1>
+{% endblock %}
+
+{% block content %}
+<ul>
+    {% for author in authors %}
+    <li>
+        <a href="/authors/{{ author.id }}">{{ author.name }}</a>
+    </li>
+    {% endfor %}
+</ul>
+{% if authors.len() == 0 %}
+<p>No authors found.</p>
+{% endif %}
+{% endblock content %}
+
+{% block pagination %}
+{% for index in 1..=pages %}
+<a href="/authors?page={{ index }}">{{ index }}</a>
+{% endfor %}
+{% endblock pagination %}
