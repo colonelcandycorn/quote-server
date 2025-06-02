@@ -24,9 +24,18 @@ pub fn template_router(state: AppState) -> Router<()> {
 
     Router::new()
         .route("/", get(template::get_root))
-        .route("/quotes", get(template::get_quotes).post(template::post_quote_form))
-        .route("/tags/{tag_id}", get(template::get_tag_and_associated_quotes))
-        .route("/authors/{author_id}", get(template::get_author_and_associated_quotes))
+        .route(
+            "/quotes",
+            get(template::get_quotes).post(template::post_quote_form),
+        )
+        .route(
+            "/tags/{tag_id}",
+            get(template::get_tag_and_associated_quotes),
+        )
+        .route(
+            "/authors/{author_id}",
+            get(template::get_author_and_associated_quotes),
+        )
         .route("/authors", get(template::get_authors))
         .route("/tags", get(template::get_tags))
         .route("/submitQuote", get(template::get_quote_form))

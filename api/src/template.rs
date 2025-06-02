@@ -1,15 +1,15 @@
 use askama::Template;
 use serde::Deserialize;
 use service::data_access::DataAccess;
+use service::data_transfer_objects::AuthorDTO;
 use service::data_transfer_objects::QuoteCreateDTO;
 use service::data_transfer_objects::QuoteDTO;
-use service::data_transfer_objects::AuthorDTO;
 use service::data_transfer_objects::TagDTO;
 
 use super::AppState;
 
 use axum::{
-    extract::{Query, State, Path, Form},
+    extract::{Form, Path, Query, State},
     http::StatusCode,
     response::{Html, IntoResponse, Redirect, Response},
 };
@@ -41,7 +41,7 @@ struct AuthorTemplate {
 #[template(path = "./authors.html")]
 struct AuthorsTemplate {
     authors: Vec<AuthorDTO>,
-    pages: u64
+    pages: u64,
 }
 
 #[derive(Template)]
@@ -53,8 +53,7 @@ struct TagsTemplate {
 
 #[derive(Template)]
 #[template(path = "./quote_form.html")]
-struct QuoteFormTemplate {
-}
+struct QuoteFormTemplate {}
 
 #[derive(Deserialize)]
 pub struct Params {
@@ -77,13 +76,12 @@ pub enum AppError {
 
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
-        
         #[derive(Debug, Template)]
         #[template(path = "./error.html")]
         struct ErrorTemplate<'a> {
             status_code: &'a str,
         }
-        
+
         let (status, status_string) = match &self {
             AppError::Render(_) => (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error"),
             AppError::Database(_) => (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error"),
@@ -92,7 +90,7 @@ impl IntoResponse for AppError {
         let tmpl = ErrorTemplate {
             status_code: status_string,
         };
-        
+
         if let Ok(body) = tmpl.render() {
             (status, Html(body)).into_response()
         } else {
@@ -149,9 +147,15 @@ pub async fn get_author_and_associated_quotes(
     let page = params.page.unwrap_or(1);
     let page_size = params.page_size.unwrap_or(10);
 
-    match DataAccess::get_author_with_related_quotes(&state.db_conn, author_id, page, page_size).await {
+    match DataAccess::get_author_with_related_quotes(&state.db_conn, author_id, page, page_size)
+        .await
+    {
         Ok(Some((author, quotes, pages))) => {
-            let quotes_template = AuthorTemplate { author: author.into(), quotes, pages };
+            let quotes_template = AuthorTemplate {
+                author: author.into(),
+                quotes,
+                pages,
+            };
 
             Ok(Html(quotes_template.render()?))
         }
@@ -161,7 +165,7 @@ pub async fn get_author_and_associated_quotes(
 }
 
 #[axum::debug_handler]
-pub async fn get_authors (
+pub async fn get_authors(
     state: State<AppState>,
     Query(params): Query<Params>,
 ) -> Result<impl IntoResponse, AppError> {
@@ -175,9 +179,12 @@ pub async fn get_authors (
             Ok(Html(authors_template.render()?))
         }
         Ok(None) => {
-            let authors_template = AuthorsTemplate { authors: Vec::new(), pages: 0 };
+            let authors_template = AuthorsTemplate {
+                authors: Vec::new(),
+                pages: 0,
+            };
             Ok(Html(authors_template.render()?))
-        },
+        }
         Err(e) => Err(AppError::Database(e)),
     }
 }
@@ -197,16 +204,18 @@ pub async fn get_tags(
             Ok(Html(tags_template.render()?))
         }
         Ok(None) => {
-            let tags_template = TagsTemplate { tags: Vec::new(), pages: 0 };
+            let tags_template = TagsTemplate {
+                tags: Vec::new(),
+                pages: 0,
+            };
             Ok(Html(tags_template.render()?))
-        },
+        }
         Err(e) => Err(AppError::Database(e)),
     }
 }
 
 #[axum::debug_handler]
-pub async fn get_quote_form(
-) -> Result<impl IntoResponse, AppError> {
+pub async fn get_quote_form() -> Result<impl IntoResponse, AppError> {
     let quote_form_template = QuoteFormTemplate {};
 
     Ok(Html(quote_form_template.render()?))
@@ -215,7 +224,7 @@ pub async fn get_quote_form(
 #[axum::debug_handler]
 pub async fn post_quote_form(
     state: State<AppState>,
-    Form(quote_dto): Form<QuoteCreateDTO>
+    Form(quote_dto): Form<QuoteCreateDTO>,
 ) -> Result<impl IntoResponse, AppError> {
     let _ = DataAccess::create_quote(&state.db_conn, quote_dto).await?;
 

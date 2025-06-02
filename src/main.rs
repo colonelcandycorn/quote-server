@@ -50,7 +50,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_span_events(tracing_subscriber::fmt::format::FmtSpan::CLOSE) // to log spans on exit
         .init();
 
-
     let state = api::AppState::new(db);
 
     let app = template_router(state);

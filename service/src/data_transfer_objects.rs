@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize, Deserializer};
+use serde::{Deserialize, Deserializer, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct QuoteCreateDTO {
@@ -27,7 +27,7 @@ where
     D: Deserializer<'de>,
 {
     let tags = Deserialize::deserialize(deserializer);
-    
+
     Ok(tags.into_iter().map(|tag| TagCreateDTO { tag }).collect())
 }
 

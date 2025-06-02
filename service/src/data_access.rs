@@ -107,7 +107,6 @@ impl DataAccess {
             .all(db)
             .await;
 
-        
         if let Ok(authors) = author_results {
             if let Some(author) = authors.into_iter().next() {
                 let dto: AuthorDTO = author.into();
@@ -300,10 +299,10 @@ impl DataAccess {
         quote: &quote::Model,
         tag: &TagDTO,
     ) -> Result<quote_tag_association::Model, DbErr> {
-
         tracing::info!(
             "\n\n\tCreating quote-tag association for quote_id: {}, tag_id: {}",
-            quote.id, tag.id
+            quote.id,
+            tag.id
         );
 
         match (quote_tag_association::ActiveModel {
