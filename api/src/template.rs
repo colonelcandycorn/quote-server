@@ -152,7 +152,7 @@ pub async fn get_author_and_associated_quotes(
     {
         Ok(Some((author, quotes, pages))) => {
             let quotes_template = AuthorTemplate {
-                author: author.into(),
+                author,
                 quotes,
                 pages,
             };
