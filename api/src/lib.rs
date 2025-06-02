@@ -30,15 +30,16 @@ pub fn template_router(state: AppState) -> Router<()> {
         )
         .route(
             "/tags/{tag_id}",
-            get(template::get_tag_and_associated_quotes),
+            get(template::get_tag_and_associated_quotes).delete(template::delete_tag),
         )
         .route(
             "/authors/{author_id}",
-            get(template::get_author_and_associated_quotes),
+            get(template::get_author_and_associated_quotes).delete(template::delete_author),
         )
         .route("/authors", get(template::get_authors))
         .route("/tags", get(template::get_tags))
         .route("/submitQuote", get(template::get_quote_form))
+        .route("/quotes/{quote_id}", get(template::get_single_quote).delete(template::delete_quote))
         .layer(trace_layer)
         .with_state(state)
 }

@@ -15,6 +15,12 @@ use axum::{
 };
 
 #[derive(Template)]
+#[template(path = "./quote.html")]
+struct QuoteTemplate {
+    quote: QuoteDTO,
+}
+
+#[derive(Template)]
 #[template(path = "./quotes.html")]
 struct QuotesTemplate {
     quotes: Vec<QuoteDTO>,
@@ -234,4 +240,65 @@ pub async fn post_quote_form(
 
 pub async fn get_root() -> Response {
     Redirect::to("/quotes").into_response()
+}
+
+#[axum::debug_handler]
+pub async fn delete_tag(
+    state: State<AppState>,
+    Path(tag_id): Path<i32>,
+) -> Result<impl IntoResponse, AppError> {
+    match DataAccess::delete_tag(&state.db_conn, tag_id).await {
+        Ok(_) => Ok(Redirect::to("/tags").into_response()),
+        Err(e) => Err(AppError::Database(e)),
+    }
+}
+#[axum::debug_handler]
+pub async fn delete_author(
+    state: State<AppState>,
+    Path(author_id): Path<i32>,
+) -> Result<impl IntoResponse, AppError> {
+    match DataAccess::delete_author(&state.db_conn, author_id).await {
+        Ok(_) => Ok(Redirect::to("/authors").into_response()),
+        Err(e) => Err(AppError::Database(e)),
+    }
+}
+
+#[axum::debug_handler]
+pub async fn delete_quote(
+    state: State<AppState>,
+    Path(quote_id): Path<i32>,
+) -> Result<impl IntoResponse, AppError> {
+    match DataAccess::delete_quote(&state.db_conn, quote_id).await {
+        Ok(_) => Ok(Redirect::to("/quotes").into_response()),
+        Err(e) => Err(AppError::Database(e)),
+    }
+}
+
+#[axum::debug_handler]
+pub async fn get_single_quote(
+    state: State<AppState>,
+    Path(quote_id): Path<i32>,
+) -> Result<impl IntoResponse, AppError> {
+    match DataAccess::get_quote(&state.db_conn, quote_id).await {
+        Ok(Some(quote)) => {
+            let quote_dto: QuoteDTO = quote.into();
+            let quote_template = QuoteTemplate { quote: quote_dto };
+
+            Ok(Html(quote_template.render()?))
+        },
+        Ok(None) => Err(AppError::NotFound),
+        Err(e) => Err(AppError::Database(e)),
+    }
+}
+
+#[axum::debug_handler]
+pub async fn update_quote_with_new_tag(
+    state: State<AppState>,
+    Path(quote_id): Path<i32>,
+    Form(tag_dto): Form<String>,
+) -> Result<impl IntoResponse, AppError> {
+    match DataAccess::update_quote_with_new_tag(&state.db_conn, quote_id, tag_dto).await {
+        Ok(_) => Ok(Redirect::to("/quotes").into_response()),
+        Err(e) => Err(AppError::Database(e)),
+    }
 }

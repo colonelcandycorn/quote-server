@@ -1,9 +1,6 @@
 use super::data_transfer_objects::{AuthorDTO, QuoteCreateDTO, QuoteDTO, TagDTO};
 use ::entity::{
-    author::{self, Entity as Author},
-    quote::{self, Entity as Quote},
-    quote_tag_association,
-    tag::{self, Entity as Tag},
+    author::{self, Entity as Author}, prelude::QuoteTagAssociation, quote::{self, Entity as Quote}, quote_tag_association, tag::{self, Entity as Tag}
 };
 use sea_orm::*;
 
@@ -165,11 +162,19 @@ impl DataAccess {
         Ok(dto)
     }
 
-    pub async fn get_quote(db: &DbConn, id: i32) -> Result<Option<quote::Model>, DbErr> {
-        Quote::find_by_id(id).one(db).await
+    pub async fn get_quote(db: &DbConn, id: i32) -> Result<Option<QuoteDTO>, DbErr> {
+        let model = Quote::find_by_id(id).one(db).await?;
+
+        if let Some(model) = model {
+            let quote_dto = DataAccess::get_quote_with_related_tags_and_author(db, model).await?;
+            return Ok(Some(quote_dto));
+        } else {
+            tracing::warn!("Quote with id {} not found", id);
+            return Ok(None);
+        }
     }
 
-    async fn get_quote_with_related_tags_and_author(
+    pub async fn get_quote_with_related_tags_and_author(
         db: &DbConn,
         quote: quote::Model,
     ) -> Result<QuoteDTO, DbErr> {
@@ -233,7 +238,7 @@ impl DataAccess {
 
         Ok(Some((result, total)))
     }
-
+    
     pub async fn get_authors_in_page(
         db: &DbConn,
         page: u64,
@@ -292,7 +297,98 @@ impl DataAccess {
         .await
     }
 
-    // QUOTE TAG ASSOCIATION
+    pub async fn update_quote_with_new_tag(
+        db: &DbConn,
+        quote_id: i32,
+        tag: String,
+    ) -> Result<quote_tag_association::Model, DbErr> {
+        tracing::info!(
+            "Updating quote with id: {} to add tag: {}",
+            quote_id,
+            tag
+        );
+
+        let quote = Quote::find_by_id(quote_id).one(db).await?;
+
+        let tag = DataAccess::get_tag_or_create_tag(db, tag).await?;
+
+        if let Some(quote) = quote {
+            DataAccess::create_quote_tag_association(db, &quote, &tag).await
+        } else {
+            Err(DbErr::RecordNotFound(format!(
+                "Quote with id {} not found",
+                quote_id
+            )))
+        }
+    }
+
+    pub async fn delete_tag(db: &DbConn, tag_id: i32) -> Result<DeleteResult, DbErr> {
+        tracing::info!("Deleting tag with id: {}", tag_id);
+        Tag::delete_by_id(tag_id).exec(db).await
+            .map_err(|e| {
+                tracing::error!("Failed to delete tag: {:?}", e);
+                e
+            })
+    }
+
+    pub async fn delete_quote(db: &DbConn, quote_id: i32) -> Result<DeleteResult, DbErr> {
+        tracing::info!("Deleting quote with id: {}", quote_id);
+        Quote::delete_by_id(quote_id).exec(db)
+        .await
+            .map_err(|e| {
+                tracing::error!("Failed to delete quote: {:?}", e);
+                e
+            })
+    }
+
+    pub async fn delete_author(db: &DbConn, author_id: i32) -> Result<DeleteResult, DbErr> {
+        // delete the fucking author
+        tracing::info!("Deleting author with id: {}", author_id);
+        Author::delete_by_id(author_id)
+            .exec(db)
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to delete author: {:?}", e);
+                e
+            })
+    }
+
+    // don't know if we need these because I didn't explicitly set on delete cascade in the schema
+
+    pub async fn delete_quote_tag_association_by_tag_id(
+        db: &DbConn,
+        tag_id: i32,
+    ) -> Result<DeleteResult, DbErr> {
+        // filter by tag_id and delete all associations
+        tracing::info!("Deleting quote-tag associations for tag_id: {}", tag_id);
+
+        QuoteTagAssociation::delete_many()
+            .filter(quote_tag_association::Column::TagId.eq(tag_id))
+            .exec(db)
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to delete quote-tag associations: {:?}", e);
+                e
+            })
+    }
+
+    pub async fn delete_quote_tag_association_by_quote_id (
+        db: &DbConn,
+        quote_id: i32,
+    ) -> Result<DeleteResult, DbErr> {
+        //filter by quote_id and delete all associations
+        tracing::info!("Deleting quote-tag associations for quote_id: {}", quote_id);
+
+        QuoteTagAssociation::delete_many()
+            .filter(quote_tag_association::Column::QuoteId.eq(quote_id))
+            .exec(db)
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to delete quote-tag associations: {:?}", e);
+                e
+            })
+    }
+
 
     pub async fn create_quote_tag_association(
         db: &DbConn,

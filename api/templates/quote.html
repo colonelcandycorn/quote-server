@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}
+<title> Quote </title>
+{% endblock title %}
+
+{% block header %}
+{% endblock header %}
+{% block content %}
+        {{ quote.quote}} <br> <a href ="/authors/{{ quote.author.id }}">{{ quote.author.name }}</a><br>
+        {% if quote.related_tags.len() == 0 %}
+        No tags
+        {% else %}
+            {% for tag in quote.related_tags %}
+                {% if loop.last %}
+                    <a href="/tags/{{tag.id}}">{{ tag.tag }}</a>
+                {% else %}
+                    <a href="/tags/{{tag.id}}">{{ tag.tag }}</a>,
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+{% endblock content %}
