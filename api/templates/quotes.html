@@ -17,9 +17,9 @@
         {% else %}
             {% for tag in quote.related_tags %}
                 {% if loop.last %}
-                    {{ tag.tag }},
+                    <a href="/tags/{{tag.id}}">{{ tag.tag }}</a>
                 {% else %}
-                    {{ tag.tag }}
+                    <a href="/tags/{{tag.id}}">{{ tag.tag }}</a>,
                 {% endif %}
             {% endfor %}
         {% endif %}
