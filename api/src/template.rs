@@ -1,6 +1,7 @@
 use askama::Template;
 use serde::Deserialize;
 use service::data_access::DataAccess;
+use service::data_transfer_objects::QuoteCreateDTO;
 use service::data_transfer_objects::QuoteDTO;
 use service::data_transfer_objects::AuthorDTO;
 use service::data_transfer_objects::TagDTO;
@@ -8,7 +9,7 @@ use service::data_transfer_objects::TagDTO;
 use super::AppState;
 
 use axum::{
-    extract::{Query, State, Path},
+    extract::{Query, State, Path, Form},
     http::StatusCode,
     response::{Html, IntoResponse, Redirect, Response},
 };
@@ -48,6 +49,11 @@ struct AuthorsTemplate {
 struct TagsTemplate {
     tags: Vec<TagDTO>,
     pages: u64,
+}
+
+#[derive(Template)]
+#[template(path = "./quote_form.html")]
+struct QuoteFormTemplate {
 }
 
 #[derive(Deserialize)]
@@ -196,6 +202,25 @@ pub async fn get_tags(
         },
         Err(e) => Err(AppError::Database(e)),
     }
+}
+
+#[axum::debug_handler]
+pub async fn get_quote_form(
+) -> Result<impl IntoResponse, AppError> {
+    let quote_form_template = QuoteFormTemplate {};
+
+    Ok(Html(quote_form_template.render()?))
+}
+
+#[axum::debug_handler]
+pub async fn post_quote_form(
+    state: State<AppState>,
+    Form(quote_dto): Form<QuoteCreateDTO>
+) -> Result<impl IntoResponse, AppError> {
+    let _ = DataAccess::create_quote(&state.db_conn, quote_dto).await?;
+
+    // probably should flash a message but idk how to do that right now
+    Ok(Redirect::to("/quotes").into_response())
 }
 
 pub async fn get_root() -> Response {

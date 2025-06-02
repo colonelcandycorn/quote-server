@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}
+<title>Add a Quote!</title>
+{% endblock %}
+
+{% block content %}
+<script>
+    function addTagHandler(event) {
+        const form = document.querySelector("form");
+
+        const numOfTags = document.querySelectorAll(".tag").length;
+
+        const newTagElement = document.createElement("div");
+        newTagElement.setAttribute("class", "tag")
+        const label = document.createElement("label");
+        label.setAttribute("for", `tag${numOfTags+ 1}`);
+        label.textContent = `Tag ${numOfTags + 1}: `;
+        const input = document.createElement("input");
+        input.setAttribute("id", `tag${numOfTags + 1}`);
+        input.setAttribute("type", "text");
+        input.setAttribute("name", "related_tags");
+        newTagElement.appendChild(label);
+        newTagElement.appendChild(input);
+        form.insertBefore(newTagElement, form.querySelector("input[type='submit']"));
+        return false;
+    }
+
+    document.getElementById("quote-form").addEventListener("submit", function (e) {
+        const tags = document.querySelectorAll(".tag input[type='text']");
+        const tagValues = [];
+        tags.forEach(tag => {
+            if (tag.value.trim() !== "") {
+                tagValues.push(tag.value.trim());
+            }
+        });
+    });
+</script>
+<form id="quote-form" action="/quotes" method="post">
+    <div>
+        <h2>Add a Your Favorite Quote!</h2>
+    </div>
+    <div>
+        <label for="quote">Quote: </label>
+        <input id="quote" type="text" name="quote" />
+    </div>
+    <div>
+        <label for="author">Author: </label>
+        <input id="author" type="text" name="author_name" />
+    </div>
+    <div class="tag">
+        <label for="tag1">Tag: </label>
+        <input id="tag1" type="text" name="related_tags" />
+        <button type="button" onclick="addTagHandler()">Add Another Tag!</button>
+    </div>
+    <input type="submit" value="Submit" />
+    <input type="reset" value="Reset" />
+
+</form>
+{% endblock %}

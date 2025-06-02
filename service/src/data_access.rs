@@ -102,20 +102,23 @@ impl DataAccess {
     ) -> Result<AuthorDTO, DbErr> {
         let author_name_lower = author_name.to_lowercase();
 
-        let author_results: Vec<author::Model> = Author::find()
+        let author_results = Author::find()
             .filter(author::Column::Name.eq(&author_name_lower))
             .all(db)
-            .await?;
+            .await;
 
-        if author_results.len() > 1 {
-            // some kind of error or logging?
+        
+        if let Ok(authors) = author_results {
+            if let Some(author) = authors.into_iter().next() {
+                let dto: AuthorDTO = author.into();
+                return Ok(dto);
+            }
         }
 
-        if let Some(author) = author_results.into_iter().next() {
-            let dto: AuthorDTO = author.into();
-            return Ok(dto);
-        }
-
+        tracing::info!(
+            "Author with name '{}' not found, creating new author.",
+            author_name_lower
+        );
         // doesn't exist so we need to create
         Ok(author::ActiveModel {
             name: Set(author_name_lower),
@@ -258,10 +261,12 @@ impl DataAccess {
     // TAGS
     pub async fn get_tag_or_create_tag(db: &DbConn, tag: String) -> Result<TagDTO, DbErr> {
         let tag_lower = tag.to_lowercase();
-        let search_results = DataAccess::get_tags(db, &tag_lower).await?;
+        let search_results = DataAccess::get_tags(db, &tag_lower).await;
 
-        if let Some(tag) = search_results.into_iter().next() {
-            return Ok(tag.into());
+        if let Ok(search_results) = search_results {
+            if let Some(tag) = search_results.into_iter().next() {
+                return Ok(tag.into());
+            }
         }
 
         let model = DataAccess::create_tag(db, &tag_lower).await?;
@@ -279,6 +284,7 @@ impl DataAccess {
     }
 
     pub async fn create_tag(db: &DbConn, tag: &str) -> Result<tag::Model, DbErr> {
+        tracing::info!("Creating tag: {}", tag);
         tag::ActiveModel {
             tag: Set(tag.to_owned()),
             ..Default::default()
@@ -293,12 +299,25 @@ impl DataAccess {
         db: &DbConn,
         quote: &quote::Model,
         tag: &TagDTO,
-    ) -> Result<quote_tag_association::ActiveModel, DbErr> {
-        quote_tag_association::ActiveModel {
+    ) -> Result<quote_tag_association::Model, DbErr> {
+
+        tracing::info!(
+            "\n\n\tCreating quote-tag association for quote_id: {}, tag_id: {}",
+            quote.id, tag.id
+        );
+
+        match (quote_tag_association::ActiveModel {
             quote_id: Set(quote.id),
             tag_id: Set(tag.id),
         }
-        .save(db)
-        .await
+        .insert(db)
+        .await)
+        {
+            Ok(am) => Ok(am),
+            Err(e) => {
+                tracing::error!("Failed to save quote_tag_association: {:?}", e);
+                Err(e)
+            }
+        }
     }
 }

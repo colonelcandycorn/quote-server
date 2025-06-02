@@ -2702,6 +2702,7 @@ dependencies = [
  "entity",
  "sea-orm",
  "serde",
+ "tracing",
 ]
 
 [[package]]

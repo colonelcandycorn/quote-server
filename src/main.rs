@@ -43,6 +43,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::INFO)
+        .with_target(false) // optional: cleaner output
+        .with_thread_ids(true) // optional: extra context
+        .with_span_events(tracing_subscriber::fmt::format::FmtSpan::CLOSE) // to log spans on exit
+        .init();
+
+
     let state = api::AppState::new(db);
 
     let app = template_router(state);
