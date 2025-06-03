@@ -8,3 +8,4 @@ entity = { path = "../entity" }
 sea-orm = { version = "1.1.10", features = [ "sqlx-sqlite", "runtime-async-std-native-tls", "macros" ] }
 serde = { version = "1.0.218", features = ["derive"] }
 tracing = "0.1.41"
+utoipa = { version = "5.3.1", features = ["axum_extras"] }

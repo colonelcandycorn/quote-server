@@ -2816,6 +2816,7 @@ dependencies = [
  "sea-orm",
  "serde",
  "tracing",
+ "utoipa",
 ]
 
 [[package]]

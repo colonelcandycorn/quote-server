@@ -6,32 +6,85 @@ use axum::Json;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use service::data_access::DataAccess;
-use service::data_transfer_objects::{QuoteCreateDTO, QuoteDTO, TagCreateDTO};
+use service::data_transfer_objects::{QuoteCreateDTO, QuoteDTO, TagCreateDTO, AuthorDTO, TagDTO};
+use utoipa::{IntoParams, OpenApi, ToSchema};
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, IntoParams)]
 pub struct Params {
     pub page: Option<u64>,
     pub page_size: Option<u64>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ToSchema)]
 pub struct QuoteResponse {
     pub quotes: Vec<QuoteDTO>,
     pub pages: u64,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ToSchema)]
 pub struct TagResponse {
-    pub tags: Vec<service::data_transfer_objects::TagDTO>,
+    pub tags: Vec<TagDTO>,
     pub pages: u64,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ToSchema)]
 pub struct AuthorResponse {
-    pub authors: Vec<service::data_transfer_objects::AuthorDTO>,
+    pub authors: Vec<AuthorDTO>,
     pub pages: u64,
 }
 
+#[derive(Serialize, Deserialize, ToSchema)]
+pub struct TagAndRelatedQuotesResponse {
+    pub tag: TagDTO,
+    pub quotes: Vec<QuoteDTO>,
+    pub pages: u64,
+}
+
+#[derive(Serialize, Deserialize, ToSchema)]
+pub struct AuthorAndAssociatedQuotesResponse {
+    pub author: AuthorDTO,
+    pub quotes: Vec<QuoteDTO>,
+    pub pages: u64,
+}
+
+// source: https://github.com/juhaku/utoipa/blob/master/examples/simple-axum/src/main.rs
+#[derive(OpenApi)]
+#[openapi(paths(
+    openapi,
+    get_authors,
+    get_quotes,
+    post_quote,
+    get_tags,
+    get_single_quote,
+    delete_quote,
+    get_tag_and_associated_quotes,
+    delete_tag,
+    get_author_and_associated_quotes,
+    patch_quote_with_new_tag
+))]
+struct ApiDoc;
+
+#[utoipa::path(
+    get,
+    path = "/api-docs/openapi.json",
+    responses(
+        (status = 200, description = "JSON file", body = ())
+    )
+)]
+pub async fn openapi() -> Json<utoipa::openapi::OpenApi> {
+    Json(ApiDoc::openapi())
+}
+
+#[utoipa::path(
+    get,
+    path = "/authors",
+    params(Params),
+    responses(
+        (status = 200, description = "List of authors", body = AuthorResponse),
+        (status = 404, description = "No authors found"),
+        (status = 500, description = "Internal server error")
+    
+))]
 pub async fn get_authors(
     state: State<AppState>,
     Query(params): Query<Params>,
@@ -55,6 +108,16 @@ pub async fn get_authors(
     }
 }
 
+#[utoipa::path(
+    get,
+    path = "/quotes",
+    params(Params),
+    responses(
+        (status = 200, description = "List of quotes", body = QuoteResponse),
+        (status = 404, description = "No quotes found"),
+        (status = 500, description = "Internal server error")
+    )
+)]
 pub async fn get_quotes(state: State<AppState>, Query(params): Query<Params>) -> impl IntoResponse {
     let page = params.page.unwrap_or(1);
     let page_size = params.page_size.unwrap_or(10);
@@ -72,6 +135,15 @@ pub async fn get_quotes(state: State<AppState>, Query(params): Query<Params>) ->
     }
 }
 
+#[utoipa::path(
+    post,
+    path = "/quotes",
+    request_body = QuoteCreateDTO,
+    responses(
+        (status = 201, description = "Quote created", body = QuoteDTO),
+        (status = 500, description = "Internal server error")
+    )
+)]
 pub async fn post_quote(
     state: State<AppState>,
     Json(quote_create_dto): Json<QuoteCreateDTO>,
@@ -85,6 +157,16 @@ pub async fn post_quote(
     }
 }
 
+#[utoipa::path(
+    get,
+    path = "/tags",
+    params(Params),
+    responses(
+        (status = 200, description = "List of tags", body = TagResponse),
+        (status = 404, description = "No tags found"),
+        (status = 500, description = "Internal server error")
+    )
+)]
 pub async fn get_tags(state: State<AppState>, Query(params): Query<Params>) -> impl IntoResponse {
     let page = params.page.unwrap_or(1);
     let page_size = params.page_size.unwrap_or(10);
@@ -105,6 +187,16 @@ pub async fn get_tags(state: State<AppState>, Query(params): Query<Params>) -> i
     }
 }
 
+
+#[utoipa::path(
+    get,
+    path = "/quotes/{quote_id}",
+    responses(
+        (status = 200, description = "Single quote", body = QuoteDTO),
+        (status = 404, description = "Quote not found"),
+        (status = 500, description = "Internal server error")
+    )
+)]
 pub async fn get_single_quote(
     state: State<AppState>,
     axum::extract::Path(quote_id): axum::extract::Path<i32>,
@@ -122,6 +214,14 @@ pub async fn get_single_quote(
     }
 }
 
+#[utoipa::path(
+    delete,
+    path = "/quotes/{quote_id}",
+    responses(
+        (status = 204, description = "Quote deleted"),
+        (status = 500, description = "Internal server error")
+    )
+)]
 pub async fn delete_quote(
     state: State<AppState>,
     axum::extract::Path(quote_id): axum::extract::Path<i32>,
@@ -135,6 +235,16 @@ pub async fn delete_quote(
     }
 }
 
+#[utoipa::path(
+    get,
+    path = "/tags/{tag_id}",
+    params(Params),
+    responses(
+        (status = 200, description = "Tag and associated quotes", body = TagAndRelatedQuotesResponse),
+        (status = 404, description = "Tag not found"),
+        (status = 500, description = "Internal server error")
+    )
+)]
 pub async fn get_tag_and_associated_quotes(
     state: State<AppState>,
     axum::extract::Path(tag_id): axum::extract::Path<i32>,
@@ -146,7 +256,7 @@ pub async fn get_tag_and_associated_quotes(
     match DataAccess::get_tag_with_related_quotes(&state.db_conn, tag_id, page, page_size).await {
         Ok(Some((tag, quotes, pages))) => (
             StatusCode::OK,
-            Json(json!({ "tag": tag, "quotes": quotes, "pages": pages })),
+            Json(json!(TagAndRelatedQuotesResponse { tag, quotes, pages })),
         ),
         Ok(None) => (
             StatusCode::NOT_FOUND,
@@ -159,6 +269,14 @@ pub async fn get_tag_and_associated_quotes(
     }
 }
 
+#[utoipa::path(
+    delete,
+    path = "/tags/{tag_id}",
+    responses(
+        (status = 204, description = "Tag deleted"),
+        (status = 500, description = "Internal server error")
+    )
+)]
 pub async fn delete_tag(
     state: State<AppState>,
     axum::extract::Path(tag_id): axum::extract::Path<i32>,
@@ -172,6 +290,16 @@ pub async fn delete_tag(
     }
 }
 
+#[utoipa::path(
+    get,
+    path = "/authors/{author_id}",
+    params(Params),
+    responses(
+        (status = 200, description = "Author and associated quotes", body = AuthorAndAssociatedQuotesResponse),
+        (status = 404, description = "Author not found"),
+        (status = 500, description = "Internal server error")
+    )
+)]
 pub async fn get_author_and_associated_quotes(
     state: State<AppState>,
     axum::extract::Path(author_id): axum::extract::Path<i32>,
@@ -185,7 +313,7 @@ pub async fn get_author_and_associated_quotes(
     {
         Ok(Some((author, quotes, pages))) => (
             StatusCode::OK,
-            Json(json!({ "author": author, "quotes": quotes, "pages": pages })),
+            Json(json!(AuthorAndAssociatedQuotesResponse { author, quotes, pages })),
         ),
         Ok(None) => (
             StatusCode::NOT_FOUND,
@@ -198,6 +326,16 @@ pub async fn get_author_and_associated_quotes(
     }
 }
 
+#[utoipa::path(
+    patch,
+    path = "/quotes/{quote_id}",
+    request_body = TagCreateDTO,
+    responses(
+        (status = 200, description = "Quote updated with new tag", body = QuoteDTO),
+        (status = 404, description = "Quote not found"),
+        (status = 500, description = "Internal server error")
+    )
+)]
 pub async fn patch_quote_with_new_tag(
     state: State<AppState>,
     axum::extract::Path(quote_id): axum::extract::Path<i32>,

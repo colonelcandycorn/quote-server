@@ -53,6 +53,7 @@ pub fn json_router(state: AppState) -> Router<()> {
         .on_response(trace::DefaultOnResponse::new().level(tracing::Level::INFO));
 
     Router::new()
+        .route("/api-docs/openapi.json", get(json::openapi))
         .route("/quotes", get(json::get_quotes).post(json::post_quote))
         .route("/tags", get(json::get_tags))
         .route("/authors", get(json::get_authors))
