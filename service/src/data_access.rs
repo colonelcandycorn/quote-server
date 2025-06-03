@@ -301,7 +301,7 @@ impl DataAccess {
         db: &DbConn,
         quote_id: i32,
         tag: String,
-    ) -> Result<quote_tag_association::Model, DbErr> {
+    ) -> Result<Option<QuoteDTO>, DbErr> {
         tracing::info!(
             "Updating quote with id: {} to add tag: {}",
             quote_id,
@@ -313,7 +313,8 @@ impl DataAccess {
         let tag = DataAccess::get_tag_or_create_tag(db, tag).await?;
 
         if let Some(quote) = quote {
-            DataAccess::create_quote_tag_association(db, &quote, &tag).await
+            let _ = DataAccess::create_quote_tag_association(db, &quote, &tag).await?;
+            DataAccess::get_quote(db, quote_id).await
         } else {
             Err(DbErr::RecordNotFound(format!(
                 "Quote with id {} not found",

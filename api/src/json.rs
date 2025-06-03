@@ -4,7 +4,8 @@ use axum::extract::{Query, State};
 use axum::Json;
 use serde::{Deserialize, Serialize};
 use service::data_access::DataAccess;
-use service::data_transfer_objects::{QuoteDTO, QuoteCreateDTO};
+use service::data_transfer_objects::{QuoteCreateDTO, QuoteDTO, TagCreateDTO};
+use tracing_subscriber::registry::Data;
 use crate::AppState;
 use serde_json::json;
 
@@ -204,4 +205,22 @@ pub async fn get_author_and_associated_quotes(
             Json(json!({ "error": format!("Internal error: {}", e) })),
         ),
     }
+}
+
+pub async fn patch_quote_with_new_tag(
+    state: State<AppState>,
+    axum::extract::Path(quote_id): axum::extract::Path<i32>,
+    Json(tag): Json<TagCreateDTO>,
+) -> impl IntoResponse {
+        match DataAccess::update_quote_with_new_tag(&state.db_conn, quote_id, tag.tag).await {
+            Ok(Some(quote_dto)) => (StatusCode::OK, Json(json!(quote_dto))),
+            Ok(None) => (
+                StatusCode::NOT_FOUND,
+                Json(json!({"error": "Quote not found!"}))
+            ),
+            Err(e) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({ "error": format!("Internal error: {}", e) })),
+            ),
+        }
 }

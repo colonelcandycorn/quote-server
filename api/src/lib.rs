@@ -57,13 +57,14 @@ pub fn json_router(state: AppState) -> Router<()> {
              "/quotes/{quote_id}",
              get(json::get_single_quote)
         //         .put(json::put_single_quote)
-                 .delete(json::delete_quote),
+                .patch(json::patch_quote_with_new_tag)
+                .delete(json::delete_quote),
         )
         .route(
              "/tags/{tag_id}",
              get(json::get_tag_and_associated_quotes)
         //         .put(json::put_single_tag)
-                 .delete(json::delete_tag),
+                .delete(json::delete_tag),
         )
         .route(
              "/authors/{author_id}",
