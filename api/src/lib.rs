@@ -39,7 +39,10 @@ pub fn template_router(state: AppState) -> Router<()> {
         .route("/authors", get(template::get_authors))
         .route("/tags", get(template::get_tags))
         .route("/submitQuote", get(template::get_quote_form))
-        .route("/quotes/{quote_id}", get(template::get_single_quote).delete(template::delete_quote))
+        .route(
+            "/quotes/{quote_id}",
+            get(template::get_single_quote).delete(template::delete_quote),
+        )
         .layer(trace_layer)
         .with_state(state)
 }
@@ -54,23 +57,22 @@ pub fn json_router(state: AppState) -> Router<()> {
         .route("/tags", get(json::get_tags))
         .route("/authors", get(json::get_authors))
         .route(
-             "/quotes/{quote_id}",
-             get(json::get_single_quote)
-        //         .put(json::put_single_quote)
+            "/quotes/{quote_id}",
+            get(json::get_single_quote)
+                //         .put(json::put_single_quote)
                 .patch(json::patch_quote_with_new_tag)
                 .delete(json::delete_quote),
         )
         .route(
-             "/tags/{tag_id}",
-             get(json::get_tag_and_associated_quotes)
-        //         .put(json::put_single_tag)
+            "/tags/{tag_id}",
+            get(json::get_tag_and_associated_quotes)
+                //         .put(json::put_single_tag)
                 .delete(json::delete_tag),
         )
         .route(
-             "/authors/{author_id}",
-            get(json::get_author_and_associated_quotes)
-        //         .put(json::put_single_author)
-        //         .delete(json::delete_author),
+            "/authors/{author_id}",
+            get(json::get_author_and_associated_quotes), //         .put(json::put_single_author)
+                                                         //         .delete(json::delete_author),
         )
         .layer(trace_layer)
         .with_state(state)

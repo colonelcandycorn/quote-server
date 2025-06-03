@@ -281,11 +281,11 @@ pub async fn get_single_quote(
 ) -> Result<impl IntoResponse, AppError> {
     match DataAccess::get_quote(&state.db_conn, quote_id).await {
         Ok(Some(quote)) => {
-            let quote_dto: QuoteDTO = quote.into();
+            let quote_dto: QuoteDTO = quote;
             let quote_template = QuoteTemplate { quote: quote_dto };
 
             Ok(Html(quote_template.render()?))
-        },
+        }
         Ok(None) => Err(AppError::NotFound),
         Err(e) => Err(AppError::Database(e)),
     }

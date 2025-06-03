@@ -167,10 +167,10 @@ impl DataAccess {
 
         if let Some(model) = model {
             let quote_dto = DataAccess::get_quote_with_related_tags_and_author(db, model).await?;
-            return Ok(Some(quote_dto));
+            Ok(Some(quote_dto))
         } else {
             tracing::warn!("Quote with id {} not found", id);
-            return Ok(None);
+            Ok(None)
         }
     }
 

@@ -1,15 +1,12 @@
-use axum::http::StatusCode;
-use axum::response::{IntoResponse, Response};
+use crate::AppState;
 use axum::extract::{Query, State};
+use axum::http::StatusCode;
+use axum::response::IntoResponse;
 use axum::Json;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use service::data_access::DataAccess;
 use service::data_transfer_objects::{QuoteCreateDTO, QuoteDTO, TagCreateDTO};
-use tracing_subscriber::registry::Data;
-use crate::AppState;
-use serde_json::json;
-
-
 
 #[derive(Deserialize, Serialize)]
 pub struct Params {
@@ -58,17 +55,12 @@ pub async fn get_authors(
     }
 }
 
-pub async fn get_quotes(
-    state: State<AppState>,
-    Query(params): Query<Params>,
-) -> impl IntoResponse {
+pub async fn get_quotes(state: State<AppState>, Query(params): Query<Params>) -> impl IntoResponse {
     let page = params.page.unwrap_or(1);
     let page_size = params.page_size.unwrap_or(10);
 
     match DataAccess::get_quotes_in_page(&state.db_conn, page, page_size).await {
-        Ok(Some((quotes, pages))) => {
-            (StatusCode::OK, Json(json!(QuoteResponse { quotes, pages })))
-        },
+        Ok(Some((quotes, pages))) => (StatusCode::OK, Json(json!(QuoteResponse { quotes, pages }))),
         Ok(None) => (
             StatusCode::NOT_FOUND,
             Json(json!({ "error": "No quotes found" })),
@@ -93,10 +85,7 @@ pub async fn post_quote(
     }
 }
 
-pub async fn get_tags(
-    state: State<AppState>,
-    Query(params): Query<Params>,
-) -> impl IntoResponse {
+pub async fn get_tags(state: State<AppState>, Query(params): Query<Params>) -> impl IntoResponse {
     let page = params.page.unwrap_or(1);
     let page_size = params.page_size.unwrap_or(10);
 
@@ -191,7 +180,9 @@ pub async fn get_author_and_associated_quotes(
     let page = params.page.unwrap_or(1);
     let page_size = params.page_size.unwrap_or(10);
 
-    match DataAccess::get_author_with_related_quotes(&state.db_conn, author_id, page, page_size).await {
+    match DataAccess::get_author_with_related_quotes(&state.db_conn, author_id, page, page_size)
+        .await
+    {
         Ok(Some((author, quotes, pages))) => (
             StatusCode::OK,
             Json(json!({ "author": author, "quotes": quotes, "pages": pages })),
@@ -212,15 +203,15 @@ pub async fn patch_quote_with_new_tag(
     axum::extract::Path(quote_id): axum::extract::Path<i32>,
     Json(tag): Json<TagCreateDTO>,
 ) -> impl IntoResponse {
-        match DataAccess::update_quote_with_new_tag(&state.db_conn, quote_id, tag.tag).await {
-            Ok(Some(quote_dto)) => (StatusCode::OK, Json(json!(quote_dto))),
-            Ok(None) => (
-                StatusCode::NOT_FOUND,
-                Json(json!({"error": "Quote not found!"}))
-            ),
-            Err(e) => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(json!({ "error": format!("Internal error: {}", e) })),
-            ),
-        }
+    match DataAccess::update_quote_with_new_tag(&state.db_conn, quote_id, tag.tag).await {
+        Ok(Some(quote_dto)) => (StatusCode::OK, Json(json!(quote_dto))),
+        Ok(None) => (
+            StatusCode::NOT_FOUND,
+            Json(json!({"error": "Quote not found!"})),
+        ),
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({ "error": format!("Internal error: {}", e) })),
+        ),
+    }
 }
