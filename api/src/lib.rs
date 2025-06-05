@@ -5,6 +5,8 @@ use sea_orm::DatabaseConnection;
 use tower_http::trace;
 
 use axum::routing::{get, Router};
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -52,6 +54,8 @@ pub fn json_router(state: AppState) -> Router<()> {
         .make_span_with(trace::DefaultMakeSpan::new().level(tracing::Level::INFO))
         .on_response(trace::DefaultOnResponse::new().level(tracing::Level::INFO));
 
+    let doc = json::ApiDoc::openapi();
+
     Router::new()
         .route("/api-docs/openapi.json", get(json::openapi))
         .route("/quotes", get(json::get_quotes).post(json::post_quote))
@@ -75,6 +79,7 @@ pub fn json_router(state: AppState) -> Router<()> {
             get(json::get_author_and_associated_quotes), //         .put(json::put_single_author)
                                                          //         .delete(json::delete_author),
         )
+        .merge(SwaggerUi::new("/swagger-ui").url("/api/openapi.json", doc))
         .layer(trace_layer)
         .with_state(state)
 }

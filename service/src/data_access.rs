@@ -1,6 +1,10 @@
 use super::data_transfer_objects::{AuthorDTO, QuoteCreateDTO, QuoteDTO, TagDTO};
 use ::entity::{
-    author::{self, Entity as Author}, prelude::QuoteTagAssociation, quote::{self, Entity as Quote}, quote_tag_association, tag::{self, Entity as Tag}
+    author::{self, Entity as Author},
+    prelude::QuoteTagAssociation,
+    quote::{self, Entity as Quote},
+    quote_tag_association,
+    tag::{self, Entity as Tag},
 };
 use sea_orm::*;
 
@@ -238,7 +242,7 @@ impl DataAccess {
 
         Ok(Some((result, total)))
     }
-    
+
     pub async fn get_authors_in_page(
         db: &DbConn,
         page: u64,
@@ -302,11 +306,7 @@ impl DataAccess {
         quote_id: i32,
         tag: String,
     ) -> Result<Option<QuoteDTO>, DbErr> {
-        tracing::info!(
-            "Updating quote with id: {} to add tag: {}",
-            quote_id,
-            tag
-        );
+        tracing::info!("Updating quote with id: {} to add tag: {}", quote_id, tag);
 
         let quote = Quote::find_by_id(quote_id).one(db).await?;
 
@@ -325,33 +325,27 @@ impl DataAccess {
 
     pub async fn delete_tag(db: &DbConn, tag_id: i32) -> Result<DeleteResult, DbErr> {
         tracing::info!("Deleting tag with id: {}", tag_id);
-        Tag::delete_by_id(tag_id).exec(db).await
-            .map_err(|e| {
-                tracing::error!("Failed to delete tag: {:?}", e);
-                e
-            })
+        Tag::delete_by_id(tag_id).exec(db).await.map_err(|e| {
+            tracing::error!("Failed to delete tag: {:?}", e);
+            e
+        })
     }
 
     pub async fn delete_quote(db: &DbConn, quote_id: i32) -> Result<DeleteResult, DbErr> {
         tracing::info!("Deleting quote with id: {}", quote_id);
-        Quote::delete_by_id(quote_id).exec(db)
-        .await
-            .map_err(|e| {
-                tracing::error!("Failed to delete quote: {:?}", e);
-                e
-            })
+        Quote::delete_by_id(quote_id).exec(db).await.map_err(|e| {
+            tracing::error!("Failed to delete quote: {:?}", e);
+            e
+        })
     }
 
     pub async fn delete_author(db: &DbConn, author_id: i32) -> Result<DeleteResult, DbErr> {
         // delete the fucking author
         tracing::info!("Deleting author with id: {}", author_id);
-        Author::delete_by_id(author_id)
-            .exec(db)
-            .await
-            .map_err(|e| {
-                tracing::error!("Failed to delete author: {:?}", e);
-                e
-            })
+        Author::delete_by_id(author_id).exec(db).await.map_err(|e| {
+            tracing::error!("Failed to delete author: {:?}", e);
+            e
+        })
     }
 
     // don't know if we need these because I didn't explicitly set on delete cascade in the schema
@@ -373,7 +367,7 @@ impl DataAccess {
             })
     }
 
-    pub async fn delete_quote_tag_association_by_quote_id (
+    pub async fn delete_quote_tag_association_by_quote_id(
         db: &DbConn,
         quote_id: i32,
     ) -> Result<DeleteResult, DbErr> {
@@ -389,7 +383,6 @@ impl DataAccess {
                 e
             })
     }
-
 
     pub async fn create_quote_tag_association(
         db: &DbConn,

@@ -1,4 +1,4 @@
-use api::{json_router};
+use api::json_router;
 use clap::Parser;
 use sea_orm::Database;
 use service::data_access::DataAccess;

@@ -6,7 +6,7 @@ use axum::Json;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use service::data_access::DataAccess;
-use service::data_transfer_objects::{QuoteCreateDTO, QuoteDTO, TagCreateDTO, AuthorDTO, TagDTO};
+use service::data_transfer_objects::{AuthorDTO, QuoteCreateDTO, QuoteDTO, TagCreateDTO, TagDTO};
 use utoipa::{IntoParams, OpenApi, ToSchema};
 
 #[derive(Deserialize, Serialize, IntoParams)]
@@ -62,7 +62,7 @@ pub struct AuthorAndAssociatedQuotesResponse {
     get_author_and_associated_quotes,
     patch_quote_with_new_tag
 ))]
-struct ApiDoc;
+pub struct ApiDoc;
 
 #[utoipa::path(
     get,
@@ -83,7 +83,6 @@ pub async fn openapi() -> Json<utoipa::openapi::OpenApi> {
         (status = 200, description = "List of authors", body = AuthorResponse),
         (status = 404, description = "No authors found"),
         (status = 500, description = "Internal server error")
-    
 ))]
 pub async fn get_authors(
     state: State<AppState>,
@@ -186,7 +185,6 @@ pub async fn get_tags(state: State<AppState>, Query(params): Query<Params>) -> i
         ),
     }
 }
-
 
 #[utoipa::path(
     get,
@@ -313,7 +311,11 @@ pub async fn get_author_and_associated_quotes(
     {
         Ok(Some((author, quotes, pages))) => (
             StatusCode::OK,
-            Json(json!(AuthorAndAssociatedQuotesResponse { author, quotes, pages })),
+            Json(json!(AuthorAndAssociatedQuotesResponse {
+                author,
+                quotes,
+                pages
+            })),
         ),
         Ok(None) => (
             StatusCode::NOT_FOUND,
