@@ -19,7 +19,7 @@ impl AppState {
     }
 }
 
-pub fn template_router(state: AppState) -> Router<()> {
+pub fn template_router() -> Router<AppState> {
     let trace_layer = trace::TraceLayer::new_for_http()
         .make_span_with(trace::DefaultMakeSpan::new().level(tracing::Level::INFO))
         .on_response(trace::DefaultOnResponse::new().level(tracing::Level::INFO));
@@ -46,10 +46,9 @@ pub fn template_router(state: AppState) -> Router<()> {
             get(template::get_single_quote).delete(template::delete_quote),
         )
         .layer(trace_layer)
-        .with_state(state)
 }
 
-pub fn json_router(state: AppState) -> Router<()> {
+pub fn json_router() -> Router<AppState> {
     let trace_layer = trace::TraceLayer::new_for_http()
         .make_span_with(trace::DefaultMakeSpan::new().level(tracing::Level::INFO))
         .on_response(trace::DefaultOnResponse::new().level(tracing::Level::INFO));
@@ -57,7 +56,6 @@ pub fn json_router(state: AppState) -> Router<()> {
     let doc = json::ApiDoc::openapi();
 
     Router::new()
-        .route("/api-docs/openapi.json", get(json::openapi))
         .route("/quotes", get(json::get_quotes).post(json::post_quote))
         .route("/tags", get(json::get_tags))
         .route("/authors", get(json::get_authors))
@@ -81,5 +79,4 @@ pub fn json_router(state: AppState) -> Router<()> {
         )
         .merge(SwaggerUi::new("/swagger-ui").url("/api/openapi.json", doc))
         .layer(trace_layer)
-        .with_state(state)
 }

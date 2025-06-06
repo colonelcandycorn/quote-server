@@ -1,4 +1,3 @@
-use api::json_router;
 use clap::Parser;
 use sea_orm::Database;
 use service::data_access::DataAccess;
@@ -52,7 +51,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let state = api::AppState::new(db);
 
-    let app = json_router(state);
+    let json_router = api::json_router();
+    let template_router = api::template_router();
+    let app = axum::Router::new()
+        .nest("/templates", template_router)
+        .merge(json_router)
+        .with_state(state);
 
     let addr = "127.0.0.1:3000";
 
