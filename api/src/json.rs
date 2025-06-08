@@ -66,7 +66,7 @@ pub struct ApiDoc;
 
 #[utoipa::path(
     get,
-    path = "/api-docs/openapi.json",
+    path = "/api/api-docs/openapi.json",
     responses(
         (status = 200, description = "JSON file", body = ())
     )
@@ -77,7 +77,7 @@ pub async fn openapi() -> Json<utoipa::openapi::OpenApi> {
 
 #[utoipa::path(
     get,
-    path = "/authors",
+    path = "/api/authors",
     params(Params),
     responses(
         (status = 200, description = "List of authors", body = AuthorResponse),
@@ -109,7 +109,7 @@ pub async fn get_authors(
 
 #[utoipa::path(
     get,
-    path = "/quotes",
+    path = "/api/quotes",
     params(Params),
     responses(
         (status = 200, description = "List of quotes", body = QuoteResponse),
@@ -136,7 +136,7 @@ pub async fn get_quotes(state: State<AppState>, Query(params): Query<Params>) ->
 
 #[utoipa::path(
     post,
-    path = "/quotes",
+    path = "/api/quotes",
     request_body = QuoteCreateDTO,
     responses(
         (status = 201, description = "Quote created", body = QuoteDTO),
@@ -158,7 +158,7 @@ pub async fn post_quote(
 
 #[utoipa::path(
     get,
-    path = "/tags",
+    path = "/api/tags",
     params(Params),
     responses(
         (status = 200, description = "List of tags", body = TagResponse),
@@ -188,7 +188,7 @@ pub async fn get_tags(state: State<AppState>, Query(params): Query<Params>) -> i
 
 #[utoipa::path(
     get,
-    path = "/quotes/{quote_id}",
+    path = "/api/quotes/{quote_id}",
     responses(
         (status = 200, description = "Single quote", body = QuoteDTO),
         (status = 404, description = "Quote not found"),
@@ -214,7 +214,7 @@ pub async fn get_single_quote(
 
 #[utoipa::path(
     delete,
-    path = "/quotes/{quote_id}",
+    path = "/api/quotes/{quote_id}",
     responses(
         (status = 204, description = "Quote deleted"),
         (status = 500, description = "Internal server error")
@@ -235,7 +235,7 @@ pub async fn delete_quote(
 
 #[utoipa::path(
     get,
-    path = "/tags/{tag_id}",
+    path = "/api/tags/{tag_id}",
     params(Params),
     responses(
         (status = 200, description = "Tag and associated quotes", body = TagAndRelatedQuotesResponse),
@@ -269,7 +269,7 @@ pub async fn get_tag_and_associated_quotes(
 
 #[utoipa::path(
     delete,
-    path = "/tags/{tag_id}",
+    path = "/api/tags/{tag_id}",
     responses(
         (status = 204, description = "Tag deleted"),
         (status = 500, description = "Internal server error")
@@ -290,7 +290,7 @@ pub async fn delete_tag(
 
 #[utoipa::path(
     get,
-    path = "/authors/{author_id}",
+    path = "/api/authors/{author_id}",
     params(Params),
     responses(
         (status = 200, description = "Author and associated quotes", body = AuthorAndAssociatedQuotesResponse),
@@ -330,7 +330,7 @@ pub async fn get_author_and_associated_quotes(
 
 #[utoipa::path(
     patch,
-    path = "/quotes/{quote_id}",
+    path = "/api/quotes/{quote_id}",
     request_body = TagCreateDTO,
     responses(
         (status = 200, description = "Quote updated with new tag", body = QuoteDTO),

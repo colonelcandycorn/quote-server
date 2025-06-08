@@ -53,8 +53,6 @@ pub fn json_router() -> Router<AppState> {
         .make_span_with(trace::DefaultMakeSpan::new().level(tracing::Level::INFO))
         .on_response(trace::DefaultOnResponse::new().level(tracing::Level::INFO));
 
-    let doc = json::ApiDoc::openapi();
-
     Router::new()
         .route("/quotes", get(json::get_quotes).post(json::post_quote))
         .route("/tags", get(json::get_tags))
@@ -77,6 +75,5 @@ pub fn json_router() -> Router<AppState> {
             get(json::get_author_and_associated_quotes), //         .put(json::put_single_author)
                                                          //         .delete(json::delete_author),
         )
-        .merge(SwaggerUi::new("/swagger-ui").url("/api/openapi.json", doc))
         .layer(trace_layer)
 }

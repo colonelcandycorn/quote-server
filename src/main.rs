@@ -2,8 +2,10 @@ use clap::Parser;
 use sea_orm::Database;
 use service::data_access::DataAccess;
 use service::data_transfer_objects::QuoteCreateDTO;
+use utoipa::OpenApi;
 use std::fs::File;
 use std::io::BufReader;
+use utoipa_swagger_ui::SwaggerUi;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -51,11 +53,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let state = api::AppState::new(db);
 
+    let doc = api::json::ApiDoc::openapi();
+
     let json_router = api::json_router();
     let template_router = api::template_router();
     let app = axum::Router::new()
-        .nest("/templates", template_router)
-        .merge(json_router)
+        .merge(template_router)
+        .nest("/api", json_router)
+        .merge(SwaggerUi::new("/swagger-ui").url("/api/openapi.json", doc))
         .with_state(state);
 
     let addr = "127.0.0.1:3000";
