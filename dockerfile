@@ -10,7 +10,6 @@ ARG RUST_VERSION=1.87
 # Create a stage for building the application.
 
 FROM rust:${RUST_VERSION} AS build
-WORKDIR /app
 
 # Install host build dependencies.
 RUN apt-get install git curl
@@ -30,16 +29,14 @@ RUN --mount=type=bind,source=src,target=src \
     --mount=type=bind,source=service,target=service \
     --mount=type=bind,source=api,target=api \
     --mount=type=bind,source=entity,target=entity \
-    --mount=type=cache,target=/app/target/ \
+    --mount=type=cache,target=/target/ \
     --mount=type=cache,target=/usr/local/cargo/git/db \
     --mount=type=cache,target=/usr/local/cargo/registry/ \
     cargo build --release && \
-    cp target/release/quote-server /app/quote-server
+    cp target/release/quote-server /quote-server
 
-RUN touch quote_server.db
 ################################################################################
 # run the application with -i once
-RUN cargo run --release -i
 
 # Create a non-privileged user that the app will run under.
 # See https://docs.docker.com/go/dockerfile-user-best-practices/
@@ -61,7 +58,7 @@ COPY --chown=appuser:appuser api ./api
 COPY --chown=appuser:appuser entity ./entity
 COPY --chown=appuser:appuser Cargo.toml ./Cargo.toml
 COPY --chown=appuser:appuser Cargo.lock ./Cargo.lock
-COPY --chown=appuser:appuser quote_server.db ./quote_server.db
+COPY --chown=appuser:appuser quote_server.db quote_server.db
 
 # Remember to expose the port that the application listens on
 # with -p 3000:300
@@ -69,4 +66,4 @@ COPY --chown=appuser:appuser quote_server.db ./quote_server.db
 EXPOSE 3000
 
 # What the container should run when it is started.
-CMD ["/app/quote-server"]
+CMD ["/quote-server", "-i"]
