@@ -14,6 +14,24 @@ Templates were good for testing out the DataAccess functions I wrote, and implem
 
 ## Running the Server
 
+### With Docker
+1. **Build Docker**
+
+    ```bash
+    docker build -t quote-server .
+    ```
+
+2. **Run Docker**
+
+    ```bash
+    docker run -p 3000:3000 quote-server
+    ```
+
+3. **Visit the project.**  
+Running the project will serve the website at [http://127.0.0.1:3000](http://127.0.0.1:3000).
+
+### Without Docker
+
 1. **Specify the SQLite database location.**  
 You can use the default name `quotes_server.db`, or provide a custom name:
 
