@@ -231,6 +231,7 @@ pub enum Quote {
     Id,
     Name,
     AuthorId,
+    #[allow(clippy::enum_variant_names)]
     Quote,
 }
 

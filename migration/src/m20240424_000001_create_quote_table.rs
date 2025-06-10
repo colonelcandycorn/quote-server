@@ -37,5 +37,6 @@ pub enum Quote {
     Table,
     Id,
     Name,
-    Quote,
+    #[allow(clippy::enum_variant_names)]
+    Quote, // ignore warning
 }

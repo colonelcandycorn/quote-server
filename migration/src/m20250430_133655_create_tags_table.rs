@@ -68,6 +68,7 @@ impl MigrationTrait for Migration {
 enum Tag {
     Table,
     Id,
+    #[allow(clippy::enum_variant_names)]
     Tag,
 }
 
