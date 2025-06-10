@@ -5,8 +5,6 @@ use sea_orm::DatabaseConnection;
 use tower_http::trace;
 
 use axum::routing::{get, Router};
-use utoipa::OpenApi;
-use utoipa_swagger_ui::SwaggerUi;
 
 #[derive(Clone)]
 pub struct AppState {

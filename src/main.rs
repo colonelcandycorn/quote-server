@@ -2,9 +2,9 @@ use clap::Parser;
 use sea_orm::Database;
 use service::data_access::DataAccess;
 use service::data_transfer_objects::QuoteCreateDTO;
-use utoipa::OpenApi;
 use std::fs::File;
 use std::io::BufReader;
+use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
 #[derive(Parser, Debug)]

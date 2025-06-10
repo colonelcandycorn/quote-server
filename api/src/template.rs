@@ -227,12 +227,28 @@ pub async fn get_quote_form() -> Result<impl IntoResponse, AppError> {
     Ok(Html(quote_form_template.render()?))
 }
 
+#[derive(Deserialize)]
+pub struct QuoteFormSubmission {
+    quote: String,
+    author_name: String,
+}
+
+impl From<QuoteFormSubmission> for QuoteCreateDTO {
+    fn from(submission: QuoteFormSubmission) -> Self {
+        QuoteCreateDTO {
+            quote: submission.quote,
+            related_tags: Vec::new(), // Assuming no tags are submitted in the form
+            author_name: submission.author_name,
+        }
+    }
+}
+
 #[axum::debug_handler]
 pub async fn post_quote_form(
     state: State<AppState>,
-    Form(quote_dto): Form<QuoteCreateDTO>,
+    Form(quote_dto): Form<QuoteFormSubmission>,
 ) -> Result<impl IntoResponse, AppError> {
-    let _ = DataAccess::create_quote(&state.db_conn, quote_dto).await?;
+    let _ = DataAccess::create_quote(&state.db_conn, quote_dto.into()).await?;
 
     // probably should flash a message but idk how to do that right now
     Ok(Redirect::to("/quotes").into_response())

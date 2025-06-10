@@ -1,10 +1,9 @@
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 #[derive(Clone, Debug, Serialize, Deserialize, ToSchema)]
 pub struct QuoteCreateDTO {
     pub quote: String,
-    #[serde(deserialize_with = "deserialize_tags")]
     pub related_tags: Vec<TagCreateDTO>,
     pub author_name: String,
 }
@@ -20,16 +19,6 @@ pub struct QuoteDTO {
 #[derive(Clone, Debug, Serialize, Deserialize, ToSchema)]
 pub struct TagCreateDTO {
     pub tag: String,
-}
-
-// source: https://serde.rs/impl-deserialize.html
-fn deserialize_tags<'de, D>(deserializer: D) -> Result<Vec<TagCreateDTO>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let tags = Deserialize::deserialize(deserializer);
-
-    Ok(tags.into_iter().map(|tag| TagCreateDTO { tag }).collect())
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, utoipa::ToSchema)]
