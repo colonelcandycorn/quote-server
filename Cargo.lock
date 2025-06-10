@@ -2217,6 +2217,7 @@ dependencies = [
  "clap",
  "displaydoc",
  "entity",
+ "migration",
  "sea-orm",
  "serde",
  "serde_json",

@@ -1,4 +1,5 @@
 use clap::Parser;
+use migration::MigratorTrait;
 use sea_orm::Database;
 use service::data_access::DataAccess;
 use service::data_transfer_objects::QuoteCreateDTO;
@@ -37,6 +38,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let db = Database::connect(format!("sqlite:{}", args.db_path)).await?;
 
     if args.init {
+        migration::Migrator::up(&db, None).await?;
+        println!("Database migration completed successfully.");
         let quotes = read_quotes_from_file("./static/assets/quotes.json")?;
         for quote in quotes {
             let quote_dto = DataAccess::create_quote(&db, quote).await?;
@@ -63,7 +66,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .merge(SwaggerUi::new("/swagger-ui").url("/api/openapi.json", doc))
         .with_state(state);
 
-    let addr = "127.0.0.1:3000";
+    let addr = "0.0.0.0:3000";
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
     println!("Listening on {}", listener.local_addr()?);

@@ -1,47 +1,72 @@
 # syntax=docker/dockerfile:1
 
-ARG RUST_VERSION=1.87
-FROM rust:${RUST_VERSION} AS build
+# This Dockerfile's original author is unknown: maybe Casey
+# Bailey or Bastian Gruber. Bart Massey adapted it for this
+# project.
 
+ARG RUST_VERSION=1.87
+
+################################################################################
+# Create a stage for building the application.
+
+FROM rust:${RUST_VERSION} AS build
 WORKDIR /app
 
-# Install build dependencies
-RUN apt-get update && apt-get install -y sqlite3 && rm -rf /var/lib/apt/lists/*
+# Install host build dependencies.
+RUN apt-get install git curl
 
-# Copy each crate and other resources based on your directory tree
-COPY Cargo.toml .
-COPY Cargo.lock .
-COPY src ./src
-COPY api ./api
-COPY entity ./entity
-COPY migration ./migration
-COPY service ./service
-COPY static ./static
+# Build the application.
+# Leverage a cache mount to /usr/local/cargo/registry/
+# for downloaded dependencies, a cache mount to /usr/local/cargo/git/db
+# for git repository dependencies, and a cache mount to /app/target/ for
+# compiled dependencies which will speed up subsequent builds.
+# Leverage a bind mount to the src directory to avoid having to copy the
+# source code into the container. Once built, copy the executable to an
+# output directory before the cache mounted /app/target is unmounted.
+RUN --mount=type=bind,source=src,target=src \
+    --mount=type=bind,source=Cargo.toml,target=Cargo.toml \
+    --mount=type=bind,source=static,target=static \
+    --mount=type=bind,source=migration,target=migration \
+    --mount=type=bind,source=service,target=service \
+    --mount=type=bind,source=api,target=api \
+    --mount=type=bind,source=entity,target=entity \
+    --mount=type=cache,target=/app/target/ \
+    --mount=type=cache,target=/usr/local/cargo/git/db \
+    --mount=type=cache,target=/usr/local/cargo/registry/ \
+    cargo build --release && \
+    cp target/release/quote-server /app/quote-server
 
-# Create an empty database
 RUN touch quote_server.db
+################################################################################
+# run the application with -i once
+RUN cargo run --release -i
 
-# Initialize the DB by running the app with `-i`
-RUN cargo run --bin quote-server -- -i
-
-# Build the release binary
-RUN cargo build --release
-
-# Final stage for a minimal runtime container
-FROM debian:bookworm-slim
-
+# Create a non-privileged user that the app will run under.
+# See https://docs.docker.com/go/dockerfile-user-best-practices/
 ARG UID=10001
-RUN adduser --disabled-password --gecos "" --shell "/sbin/nologin" --uid "${UID}" appuser
-
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --shell "/sbin/nologin" \
+    --uid "${UID}" \
+    appuser
 USER appuser
+
 WORKDIR /home/appuser
 
-# Copy runtime assets and the binary
-COPY --from=build /app/target/release/quote-server /bin/quote-server
-COPY --from=build /app/quote_server.db ./quote_server.db
-COPY --from=build /app/static ./static
-COPY --from=build /app/api/templates ./templates
+COPY --chown=appuser:appuser static ./static
+COPY --chown=appuser:appuser migration ./migration
+COPY --chown=appuser:appuser service ./service
+COPY --chown=appuser:appuser api ./api
+COPY --chown=appuser:appuser entity ./entity
+COPY --chown=appuser:appuser Cargo.toml ./Cargo.toml
+COPY --chown=appuser:appuser Cargo.lock ./Cargo.lock
+COPY --chown=appuser:appuser quote_server.db ./quote_server.db
 
+# Remember to expose the port that the application listens on
+# with -p 3000:300
+# This does not do that.
 EXPOSE 3000
 
-CMD ["/bin/quote-server", "--release"]
+# What the container should run when it is started.
+CMD ["/app/quote-server"]
