@@ -20,7 +20,7 @@ migration = { path = "./migration" }
 api = { path = "./api" }
 thiserror = "2.0.12"
 displaydoc = "0.2.5"
-tower-http = { version = "0.6.2", features = ["trace"] }
+tower-http = { version = "0.6.2", features = ["trace", "cors"] }
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 trace = "0.1.7"
 tracing = "0.1.41"

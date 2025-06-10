@@ -7,6 +7,7 @@ use std::fs::File;
 use std::io::BufReader;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
+use tower_http::cors::{CorsLayer, Any};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -46,6 +47,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("Created quote: {:?}", quote_dto);
         }
     }
+    
+    let cors = CorsLayer::new()
+    .allow_origin(Any) // allow all origins (good for dev only!)
+    .allow_methods(Any)
+    .allow_headers(Any);
 
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
@@ -64,7 +70,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .merge(template_router)
         .nest("/api", json_router)
         .merge(SwaggerUi::new("/swagger-ui").url("/api/openapi.json", doc))
-        .with_state(state);
+        .with_state(state)
+        .layer(cors);
 
     let addr = "0.0.0.0:3000";
 
