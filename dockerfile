@@ -58,7 +58,7 @@ COPY --chown=appuser:appuser api ./api
 COPY --chown=appuser:appuser entity ./entity
 COPY --chown=appuser:appuser Cargo.toml ./Cargo.toml
 COPY --chown=appuser:appuser Cargo.lock ./Cargo.lock
-COPY --chown=appuser:appuser quote_server.db quote_server.db
+RUN touch quote_server.db && chown appuser:appuser quote_server.db
 
 # Remember to expose the port that the application listens on
 # with -p 3000:300
