@@ -5,9 +5,9 @@ use service::data_access::DataAccess;
 use service::data_transfer_objects::QuoteCreateDTO;
 use std::fs::File;
 use std::io::BufReader;
+use tower_http::cors::{Any, CorsLayer};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
-use tower_http::cors::{CorsLayer, Any};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -47,11 +47,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("Created quote: {:?}", quote_dto);
         }
     }
-    
+
     let cors = CorsLayer::new()
-    .allow_origin(Any) // allow all origins (good for dev only!)
-    .allow_methods(Any)
-    .allow_headers(Any);
+        .allow_origin(Any) // allow all origins (good for dev only!)
+        .allow_methods(Any)
+        .allow_headers(Any);
 
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
